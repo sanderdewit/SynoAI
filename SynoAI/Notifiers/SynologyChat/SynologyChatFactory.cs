@@ -10,7 +10,7 @@ namespace SynoAI.Notifiers.SynologyChat
 
                 string url = section.GetValue<string>("Url");
 
-                SynologyChat webhook = new SynologyChat()
+                SynologyChat webhook = new()
                 {
                     Url = url
                 };

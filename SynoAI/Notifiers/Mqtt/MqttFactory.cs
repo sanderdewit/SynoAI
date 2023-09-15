@@ -15,7 +15,7 @@
                 string baseTopic = section.GetValue<string>("BaseTopic", "synoai");
                 bool sendImage = section.GetValue<bool>("SendImage", false);
 
-                Mqtt mqtt = new Mqtt()
+                Mqtt mqtt = new()
                 {
                     Host = host,
                     Port = port,

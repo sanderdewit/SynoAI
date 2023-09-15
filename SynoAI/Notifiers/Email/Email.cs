@@ -58,18 +58,20 @@ namespace SynoAI.Notifiers.Email
                     // Create the email message
                     string sender = string.IsNullOrWhiteSpace(Sender) ? Destination : Sender;
 
-                    MimeMessage email = new MimeMessage();
+                    MimeMessage email = new();
                     email.From.Add(new MailboxAddress("SynoAI", sender));
                     email.To.Add(MailboxAddress.Parse(Destination));
                     email.Subject = $"SynoAI: Movement Detected ({camera.Name})";
 
-                    BodyBuilder builder = new BodyBuilder();
-                    builder.HtmlBody = $"<h2>Movement detected on camera: {camera.Name}</h2>";
+                    BodyBuilder builder = new()
+                    {
+                        HtmlBody = $"<h2>Movement detected on camera: {camera.Name}</h2>"
+                    };
                     builder.Attachments.Add(filePath);
                     email.Body = builder.ToMessageBody();
 
                     // Send email
-                    using (SmtpClient smtp = new SmtpClient())
+                    using (SmtpClient smtp = new())
                     {
                         smtp.Connect(Host, Port, SocketOptions);
                         if(!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))

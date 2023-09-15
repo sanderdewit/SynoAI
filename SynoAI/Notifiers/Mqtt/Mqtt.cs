@@ -93,10 +93,8 @@ namespace SynoAI.Notifiers.Mqtt
 
             try
             {
-                using (var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(_connectionTimeoutSeconds)))
-                {
-                    await _client.ConnectAsync(mqttClientOptionsBuilder.Build(), timeoutToken.Token);
-                }
+                using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(_connectionTimeoutSeconds));
+                await _client.ConnectAsync(mqttClientOptionsBuilder.Build(), timeoutToken.Token);
             }
             catch (Exception ex)
             {

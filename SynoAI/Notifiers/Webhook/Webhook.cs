@@ -64,23 +64,22 @@ namespace SynoAI.Notifiers.Webhook
         public override async Task SendAsync(Camera camera, Notification notification, ILogger logger)
         {
             logger.LogInformation("{cameraName}: Webhook: Processing", camera.Name);
-            
-            using (HttpClient client = GetHttpClient())
+
+            using HttpClient client = GetHttpClient();
+            FileStream fileStream = null;
+            client.DefaultRequestHeaders.Authorization = GetAuthenticationHeader();
+
+            IEnumerable<string> foundTypes = notification.FoundTypes;
+            string message = GetMessage(camera, foundTypes, new List<AIPrediction>());
+
+            HttpContent content;
+            if (SendImage)
             {
-                FileStream fileStream = null;
-                client.DefaultRequestHeaders.Authorization = GetAuthenticationHeader();
+                // If we're sending the image, then we need to send the data as multipart/form-data.
+                string typesJson = JsonConvert.SerializeObject(foundTypes);
+                string validPredictionsJson = JsonConvert.SerializeObject(notification.ValidPredictions);
 
-                IEnumerable<string> foundTypes = notification.FoundTypes;
-                string message = GetMessage(camera, foundTypes, new List<AIPrediction>());
-
-                HttpContent content;
-                if (SendImage)
-                {
-                    // If we're sending the image, then we need to send the data as multipart/form-data.
-                    string typesJson = JsonConvert.SerializeObject(foundTypes);
-                    string validPredictionsJson = JsonConvert.SerializeObject(notification.ValidPredictions);
-
-                    MultipartFormDataContent form = new()
+                MultipartFormDataContent form = new()
                     {
                         { new StringContent(camera.Name), "\"camera\"" },
                         { new StringContent(typesJson), "\"foundTypes\"" },
@@ -88,90 +87,86 @@ namespace SynoAI.Notifiers.Webhook
                         { new StringContent(message), "\"message\"" }
                     };
 
-                    string imageUrl = GetImageUrl(camera, notification);
-                    if (imageUrl != null)
-                    {
-                        form.Add(new StringContent(imageUrl), "\"imageUrl\"");
-                    }
-
-                    switch (Method)
-                    {
-                        case "PATCH":
-                        case "POST":
-                        case "PUT":
-                            ProcessedImage processedImage = notification.ProcessedImage;
-                            fileStream = processedImage.GetReadonlyStream();
-                            form.Add(new StreamContent(fileStream), ImageField, processedImage.FileName);
-                            break;
-                    }
-
-                    content = form;
-                }
-                else
+                string imageUrl = GetImageUrl(camera, notification);
+                if (imageUrl != null)
                 {
-                    // Otherwise we can just use a simple JSON object
-                    content = new StringContent(GenerateJSON(camera, notification, false), null, "application/json");
+                    form.Add(new StringContent(imageUrl), "\"imageUrl\"");
                 }
 
-                logger.LogInformation("{cameraName}: Webhook: Calling {Method}.",
-                    camera.Name,
-                    Method);
-
-                HttpResponseMessage response;
-                try
+                switch (Method)
                 {
-                    switch (Method)
-                    {
-                        case "DELETE":
-                            response = await client.DeleteAsync(Url);
-                            break;
-                        case "GET":
-                            response = await client.GetAsync(Url);
-                            break;
-                        case "PATCH":
-                            response = await client.PatchAsync(Url, content);
-                            break;
-                        case "POST":
-                            response = await client.PostAsync(Url, content);
-                            break;
-                        case "PUT":
-                            response = await client.PutAsync(Url, content);
-                            break;
-                        default:
-                            logger.LogError("{camera.Name}: Webhook: The method type '{Method}' is not supported.",
-                                camera.Name,
-                                Method);
-                            return;
-                    }
-                }
-                catch (Exception ex)
-                { 
-                    logger.LogError("{cameraName}: Webhook: Unhandled Exception occurred '{exMessage}'.",
-                        camera.Name,
-                        ex.Message);
-                    return;
+                    case "PATCH":
+                    case "POST":
+                    case "PUT":
+                        ProcessedImage processedImage = notification.ProcessedImage;
+                        fileStream = processedImage.GetReadonlyStream();
+                        form.Add(new StreamContent(fileStream), ImageField, processedImage.FileName);
+                        break;
                 }
 
-                if (response.IsSuccessStatusCode)
-                {
-                    logger.LogInformation("{cameraName}: Webhook: Success.",
-                        camera.Name);
-                    logger.LogDebug("{cameraName}: Webhook: Success with HTTP status code '{responseStatusCode}'.",
-                        camera.Name,
-                        response.StatusCode);
-                }
-                else
-                {
-                    logger.LogWarning("{cameraName}: Webhook: The end point responded with HTTP status code '{responseStatusCode}'.",
-                        camera.Name,
-                        response.StatusCode);
-                }
+                content = form;
+            }
+            else
+            {
+                // Otherwise we can just use a simple JSON object
+                content = new StringContent(GenerateJSON(camera, notification, false), null, "application/json");
+            }
 
-                if (fileStream != null)
+            logger.LogInformation("{cameraName}: Webhook: Calling {Method}.",
+                camera.Name,
+                Method);
+
+            HttpResponseMessage response;
+            try
+            {
+                switch (Method)
                 {
-                    fileStream.Dispose();
+                    case "DELETE":
+                        response = await client.DeleteAsync(Url);
+                        break;
+                    case "GET":
+                        response = await client.GetAsync(Url);
+                        break;
+                    case "PATCH":
+                        response = await client.PatchAsync(Url, content);
+                        break;
+                    case "POST":
+                        response = await client.PostAsync(Url, content);
+                        break;
+                    case "PUT":
+                        response = await client.PutAsync(Url, content);
+                        break;
+                    default:
+                        logger.LogError("{camera.Name}: Webhook: The method type '{Method}' is not supported.",
+                            camera.Name,
+                            Method);
+                        return;
                 }
             }
+            catch (Exception ex)
+            {
+                logger.LogError("{cameraName}: Webhook: Unhandled Exception occurred '{exMessage}'.",
+                    camera.Name,
+                    ex.Message);
+                return;
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                logger.LogInformation("{cameraName}: Webhook: Success.",
+                    camera.Name);
+                logger.LogDebug("{cameraName}: Webhook: Success with HTTP status code '{responseStatusCode}'.",
+                    camera.Name,
+                    response.StatusCode);
+            }
+            else
+            {
+                logger.LogWarning("{cameraName}: Webhook: The end point responded with HTTP status code '{responseStatusCode}'.",
+                    camera.Name,
+                    response.StatusCode);
+            }
+
+            fileStream?.Dispose();
         }
 
         /// <summary>
