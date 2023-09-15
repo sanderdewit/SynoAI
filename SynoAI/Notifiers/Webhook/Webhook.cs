@@ -7,7 +7,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net;
 using System.Text;
 
 namespace SynoAI.Notifiers.Webhook
@@ -56,12 +55,6 @@ namespace SynoAI.Notifiers.Webhook
         /// Allow insecure URL Access to the API.
         /// </summary>
         public bool AllowInsecureUrl { get; set; }
-
-        /// <summary>
-        /// Allow insecure URL Access to the API.
-        /// </summary>
-        public bool AllowInsecureUrl { get; set; }
-
         /// <summary>
         /// Sends a notification to the Webhook.
         /// </summary>
