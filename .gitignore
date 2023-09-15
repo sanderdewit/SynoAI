@@ -371,3 +371,6 @@ PrivateNotes.txt
 Captures
 docker-compose.debug.yml
 .DS_STORE
+
+#github workflows
+.github/workflow
