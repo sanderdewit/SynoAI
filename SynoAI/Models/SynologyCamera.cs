@@ -26,7 +26,7 @@ namespace SynoAI.Models
         /// </summary>
         public string GetName()
         {
-            return string.IsNullOrWhiteSpace(NameNew) ? NameOld : NameNew;    
+            return string.IsNullOrWhiteSpace(NameNew) ? NameOld : NameNew;
         }
     }
 }

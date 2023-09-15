@@ -1,14 +1,14 @@
-using System.Dynamic;
 using Newtonsoft.Json;
 using SynoAI.Models;
+using System.Dynamic;
 
 namespace SynoAI.Notifiers
 {
     internal abstract class NotifierBase : INotifier
     {
-        public IEnumerable<string> Cameras { get; set; } 
-        public IEnumerable<string> Types { get; set; } 
-        
+        public IEnumerable<string> Cameras { get; set; }
+        public IEnumerable<string> Types { get; set; }
+
 
         public virtual Task InitializeAsync(ILogger logger) { return Task.CompletedTask; }
 

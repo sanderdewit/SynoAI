@@ -74,11 +74,11 @@ namespace SynoAI.Notifiers.Email
                     using (SmtpClient smtp = new())
                     {
                         smtp.Connect(Host, Port, SocketOptions);
-                        if(!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                        if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
                         {
                             smtp.Authenticate(Username, Password);
                         }
-                        
+
                         await smtp.SendAsync(email);
                         smtp.Disconnect(true);
                     }

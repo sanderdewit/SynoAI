@@ -1,11 +1,11 @@
-﻿using SynoAI.Notifiers.Email;
+﻿using SynoAI.Notifiers.Discord;
+using SynoAI.Notifiers.Email;
+using SynoAI.Notifiers.Mqtt;
 using SynoAI.Notifiers.Pushbullet;
 using SynoAI.Notifiers.Pushover;
 using SynoAI.Notifiers.SynologyChat;
 using SynoAI.Notifiers.Telegram;
 using SynoAI.Notifiers.Webhook;
-using SynoAI.Notifiers.Discord;
-using SynoAI.Notifiers.Mqtt;
 
 namespace SynoAI.Notifiers
 {

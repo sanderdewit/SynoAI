@@ -1,12 +1,12 @@
 using Microsoft.OpenApi.Models;
-using SynoAI.Services;
 using SynoAI.Hubs;
+using SynoAI.Services;
 
 namespace SynoAI
-{    
+{
     /// <summary>
-     /// Configures the services for the application.
-     /// </summary>
+    /// Configures the services for the application.
+    /// </summary>
     public class Startup
     {
         /// <summary>
@@ -42,7 +42,7 @@ namespace SynoAI
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SynoAI v1"));
             }
-            
+
             // euquiq: Allows /wwwroot's static files (mainly our Javascript code for RT monitoring the cameras)
             app.UseStaticFiles();
 
@@ -56,7 +56,7 @@ namespace SynoAI
                 endpoints.MapHub<SynoAIHub>("/synoaiHub");
 
                 // euquiq: Web interface mapped inside HomeController.cs
-                endpoints.MapControllers();   
+                endpoints.MapControllers();
             });
 
             lifetime.ApplicationStarted.Register(() =>

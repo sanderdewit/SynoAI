@@ -1,16 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using SkiaSharp;
+using SynoAI.Hubs;
 using SynoAI.Models;
+using SynoAI.Models.DTOs;
 using SynoAI.Notifiers;
 using SynoAI.Services;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Microsoft.AspNetCore.SignalR;
-using SynoAI.Hubs;
 using System.Drawing;
 using System.Text;
-using SynoAI.Models.DTOs;
-using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace SynoAI.Controllers
 {
@@ -201,7 +200,7 @@ namespace SynoAI.Controllers
                             {
                                 // The prediction is under the minimum specified size
                                 _logger.LogDebug("{id}: Ignored '{predictionLabel}' ([{predictionMinX},{predictionMinY}],[{predictionMaxX},{predictionMaxY}]) as it's under the minimum specified size ({minSizeX}x{minSizeY}) at EVENT TIME {overallStopwatchElapsedMilliseconds}ms.",
-                                    id, 
+                                    id,
                                     prediction.Label,
                                     prediction.MinX,
                                     prediction.MinY,
@@ -273,8 +272,8 @@ namespace SynoAI.Controllers
                         // Inform eventual web users about this new Snapshot, for the "realtime" option thru Web
                         await _hubContext.Clients.All.SendAsync("ReceiveSnapshot", camera.Name, processedImage.FileName);
                         _logger.LogInformation("{id}: Valid object found in snapshot {snapshotCount} of {ConfigMaxSnapshots} at EVENT TIME {overallStopwatchElapsedMilliseconds}ms.",
-                            id, 
-                            snapshotCount, 
+                            id,
+                            snapshotCount,
                             Config.MaxSnapshots,
                             overallStopwatch.ElapsedMilliseconds);
 
@@ -289,7 +288,7 @@ namespace SynoAI.Controllers
                         _logger.LogInformation("{id}: No valid objects at EVENT TIME {overallStopwatchElapsedMilliseconds}ms.",
                             id,
                             overallStopwatch.ElapsedMilliseconds);
-            }
+                    }
 
                     else
                     {
@@ -312,7 +311,7 @@ namespace SynoAI.Controllers
                     }
 
                     _logger.LogInformation("{id}: Finished ({overallStopwatchElapsedMilliseconds}ms).",
-                        id, 
+                        id,
                         overallStopwatch.ElapsedMilliseconds);
 
                 }
@@ -340,9 +339,9 @@ namespace SynoAI.Controllers
         [HttpPost]
         [Route("{id}")]
 
-        public void Post(string id, [FromBody]CameraOptionsDto options)
+        public void Post(string id, [FromBody] CameraOptionsDto options)
         {
-            if (options.HasChanged(x=> x.Enabled))
+            if (options.HasChanged(x => x.Enabled))
             {
                 _enabledCameras.AddOrUpdate(id, options.Enabled, (key, oldValue) => options.Enabled);
             }
@@ -383,8 +382,8 @@ namespace SynoAI.Controllers
                             exclusion.Start.X,
                             exclusion.Start.Y,
                             exclusion.End.X,
-                            exclusion.End.Y, 
-                            exclusion.Mode, 
+                            exclusion.End.Y,
+                            exclusion.Mode,
                             overallStopwatch.ElapsedMilliseconds
                             );
                         return false;
@@ -602,9 +601,9 @@ namespace SynoAI.Controllers
                     prediction.Confidence,
                     prediction.SizeX,
                     prediction.SizeY,
-                    prediction.MinX, 
-                    prediction.MinY, 
-                    prediction.MaxX, 
+                    prediction.MinX,
+                    prediction.MinY,
+                    prediction.MaxX,
                     prediction.MaxY);
             }
 

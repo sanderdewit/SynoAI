@@ -38,7 +38,7 @@ namespace SynoAI.Notifiers.Pushbullet
                 FileType = "image/jpeg"
             });
 
-            StringContent uploadRequest = new StringContent(requestJson, null, "application/json");
+            StringContent uploadRequest = new(requestJson, null, "application/json");
             AddHeaders(uploadRequest);
 
             HttpResponseMessage requestResponse = await Shared.HttpClient.PostAsync(URI_UPLOAD_REQUEST, uploadRequest);
@@ -48,58 +48,56 @@ namespace SynoAI.Notifiers.Pushbullet
                 PushbulletUploadRequestResponse uploadRequestResult = await GetResponse<PushbulletUploadRequestResponse>(requestResponse);
 
                 // POST the file to the requested URL
-                using (FileStream fileStream = processedImage.GetReadonlyStream())
-                {
-                    MultipartFormDataContent upload = new MultipartFormDataContent
+                using FileStream fileStream = processedImage.GetReadonlyStream();
+                MultipartFormDataContent upload = new()
                     {
                         {
                             new StreamContent(fileStream), "file", fileName
                         }
                     };
 
-                    AddHeaders(upload);
+                AddHeaders(upload);
 
-                    HttpResponseMessage uploadFileResponse = await Shared.HttpClient.PostAsync(uploadRequestResult.UploadUrl, upload);
+                HttpResponseMessage uploadFileResponse = await Shared.HttpClient.PostAsync(uploadRequestResult.UploadUrl, upload);
 
-                    string uploadError = null;
-                    bool uploadSuccess = uploadFileResponse.IsSuccessStatusCode;
-                    if (!uploadFileResponse.IsSuccessStatusCode)
-                    {
-                        PushbulletErrorResponse error = await GetResponse<PushbulletErrorResponse>(uploadFileResponse);
-                        uploadError = $"Pushbullet error uploading file ({error.Error})";
-                        logger.LogError("{camera.Name}: {uploadError}",
-                            camera.Name,
-                            uploadError);
-                    }
+                string uploadError = null;
+                bool uploadSuccess = uploadFileResponse.IsSuccessStatusCode;
+                if (!uploadFileResponse.IsSuccessStatusCode)
+                {
+                    PushbulletErrorResponse error = await GetResponse<PushbulletErrorResponse>(uploadFileResponse);
+                    uploadError = $"Pushbullet error uploading file ({error.Error})";
+                    logger.LogError("{camera.Name}: {uploadError}",
+                        camera.Name,
+                        uploadError);
+                }
 
-                    // The file was uploaded successfully, so we can now send the message
-                    string pushJson = JsonConvert.SerializeObject(new PushbulletPush()
-                    {
-                        Type = uploadSuccess ? "file" : "note",
-                        Title = $"{camera.Name}: Movement Detected",
-                        //Body = GetMessage(camera, notification.FoundTypes, errorMessage: uploadError),
-                        Body = GetMessage(camera, notification.FoundTypes, new List<AIPrediction>(), errorMessage: uploadError),
-                        FileName = uploadSuccess ? uploadRequestResult.FileName : null,
-                        FileUrl = uploadSuccess ? uploadRequestResult.FileUrl : null,
-                        FileType = uploadSuccess ? uploadRequestResult.FileType : null
-                    });
+                // The file was uploaded successfully, so we can now send the message
+                string pushJson = JsonConvert.SerializeObject(new PushbulletPush()
+                {
+                    Type = uploadSuccess ? "file" : "note",
+                    Title = $"{camera.Name}: Movement Detected",
+                    //Body = GetMessage(camera, notification.FoundTypes, errorMessage: uploadError),
+                    Body = GetMessage(camera, notification.FoundTypes, new List<AIPrediction>(), errorMessage: uploadError),
+                    FileName = uploadSuccess ? uploadRequestResult.FileName : null,
+                    FileUrl = uploadSuccess ? uploadRequestResult.FileUrl : null,
+                    FileType = uploadSuccess ? uploadRequestResult.FileType : null
+                });
 
-                    StringContent push = new StringContent(pushJson, null, "application/json");
-                    AddHeaders(push);
+                StringContent push = new(pushJson, null, "application/json");
+                AddHeaders(push);
 
-                    HttpResponseMessage pushResponse = await Shared.HttpClient.PostAsync(new Uri(URI_PUSHES), push);
-                    if (pushResponse.IsSuccessStatusCode)
-                    {
-                        logger.LogInformation("{camera.Name}: Pushbullet notification sent successfully",
-                            camera.Name);
-                    }
-                    else
-                    {
-                        PushbulletErrorResponse error = await GetResponse<PushbulletErrorResponse>(pushResponse);
-                        logger.LogError("{camera.Name}: Pushbullet error sending push ({error.Error})",
-                            camera.Name,
-                            error.Error);
-                    }
+                HttpResponseMessage pushResponse = await Shared.HttpClient.PostAsync(new Uri(URI_PUSHES), push);
+                if (pushResponse.IsSuccessStatusCode)
+                {
+                    logger.LogInformation("{camera.Name}: Pushbullet notification sent successfully",
+                        camera.Name);
+                }
+                else
+                {
+                    PushbulletErrorResponse error = await GetResponse<PushbulletErrorResponse>(pushResponse);
+                    logger.LogError("{camera.Name}: Pushbullet error sending push ({error.Error})",
+                        camera.Name,
+                        error.Error);
                 }
             }
             else

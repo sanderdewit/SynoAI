@@ -31,12 +31,12 @@ namespace SynoAI.Notifiers.Pushover
         /// <summary>
         /// How many seconds your notification will continue to be retried for (every retry seconds) (maximum 10800 seconds).
         /// </summary>
-        public int Expire { get; set; }        
+        public int Expire { get; set; }
         /// <summary>
         /// The pushover sound to use.
         /// </summary>
         public string Sound { get; set; }
-        
+
 
         public override async Task SendAsync(Camera camera, Notification notification, ILogger logger)
         {

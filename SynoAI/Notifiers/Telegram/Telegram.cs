@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Components.Forms;
 using SynoAI.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using System.Net.Http;
 
 namespace SynoAI.Notifiers.Telegram
 {
@@ -53,8 +51,8 @@ namespace SynoAI.Notifiers.Telegram
                         var inputFile = new InputFileStream(fileStream, processedImage.FileName);
                         await bot.SendPhotoAsync(chatId: ChatID, photo: inputFile, caption: message);
                         // TODO - Add a config to disable the sending of the image?
-                    } 
-                    else 
+                    }
+                    else
                     {
                         string photoUrl = $"{PhotoBaseURL}/{camera.Name}/{processedImage.FileName}";
                         //api requires a download of the file
@@ -64,7 +62,7 @@ namespace SynoAI.Notifiers.Telegram
                     }
 
                     logger.LogInformation("{cameraName}: Telegram notification sent successfully", cameraName);
-                } 
+                }
                 catch (Exception ex)
                 {
                     logger.LogError("{cameraName}: Error occurred sending telegram", cameraName);

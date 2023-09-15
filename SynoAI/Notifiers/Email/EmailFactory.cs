@@ -9,7 +9,7 @@ namespace SynoAI.Notifiers.Email
             using (logger.BeginScope(nameof(EmailFactory)))
             {
                 logger.LogInformation("Processing Email Config");
-                
+
                 SecureSocketOptions socketOptions = GetSecureSocketOptions(logger, section);
                 string sender = section.GetValue<string>("Sender");
                 string destination = section.GetValue<string>("Destination");

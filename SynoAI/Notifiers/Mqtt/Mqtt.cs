@@ -1,6 +1,6 @@
-﻿using SynoAI.Models;
+﻿using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet;
+using SynoAI.Models;
 
 namespace SynoAI.Notifiers.Mqtt
 {
@@ -60,7 +60,7 @@ namespace SynoAI.Notifiers.Mqtt
             MqttApplicationMessageBuilder messageBuilder = new MqttApplicationMessageBuilder()
                 .WithTopic($"{BaseTopic}/{camera.Name}/notification")
                 .WithPayload(GenerateJSON(camera, notification, SendImage));
-            
+
             await _client.PublishAsync(messageBuilder.Build());
         }
 
@@ -85,7 +85,7 @@ namespace SynoAI.Notifiers.Mqtt
 
             var mqttClientOptionsBuilder = new MqttClientOptionsBuilder()
                 .WithTcpServer(Host, Port);
-            
+
             if (Username != null)
             {
                 mqttClientOptionsBuilder.WithCredentials(Username, Password ?? "");

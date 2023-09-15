@@ -1,8 +1,8 @@
 ﻿namespace SynoAI.Models
 {
     /// <summary>
-/// Represents an AI prediction.
-/// </summary>
+    /// Represents an AI prediction.
+    /// </summary>
     public class AIPrediction
     {
         /// <summary>

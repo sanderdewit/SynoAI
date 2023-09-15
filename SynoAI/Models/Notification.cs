@@ -32,7 +32,7 @@ namespace SynoAI.Models
         {
             if (Config.AlternativeLabelling && Config.DrawMode == DrawMode.Matches)
             {
-                List<String> labels = new List<String>();
+                List<String> labels = new();
                 if (ValidPredictions.Count() == 1)
                 {
                     // If there is only a single object, then don't add a correlating number and instead just

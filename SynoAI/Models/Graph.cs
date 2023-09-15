@@ -67,12 +67,13 @@ namespace SynoAI.Models
         /// <summary>
         /// Represents a graph data structure.
         /// </summary>
-        public GraphData() {
+        public GraphData()
+        {
             GraphPoints = new List<GraphPoint>();
             HoursCounter = 0;
             MinutesCounter = 0;
             Snapshots = 0;
-            Storage =0;
+            Storage = 0;
             YMax = 0;
         }
 
@@ -86,7 +87,8 @@ namespace SynoAI.Models
     /// <summary>
     /// Class Holding graph parameters for drawing purposes
     /// </summary>
-    public class GraphDraw {
+    public class GraphDraw
+    {
 
         /// <summary>
         /// The width in pixels available for graphicking
@@ -124,7 +126,7 @@ namespace SynoAI.Models
         /// <summary>
         /// The size for each step for labels in the Y-Axis (The avail height space divided the number of steps)
         /// </summary>
-        public int GraphYStepSize() 
+        public int GraphYStepSize()
         {
             return GraphYAxisHeight() / GraphYSteps;
         }
@@ -132,9 +134,9 @@ namespace SynoAI.Models
         /// <summary>
         /// The amount of pixels available for each column in the graph
         /// </summary>
-        public int GraphColsWidth(int graphpoints, bool half = true) 
-        {   
-            int width = GraphWidth - GraphYAxisWidth;        
+        public int GraphColsWidth(int graphpoints, bool half = true)
+        {
+            int width = GraphWidth - GraphYAxisWidth;
             width /= graphpoints;
             width /= 2;
             if (!half) width *= 2;
@@ -144,7 +146,7 @@ namespace SynoAI.Models
         /// <summary>
         /// Calculate graph bar length, given the available height and the actual value to graph
         /// </summary>
-        public int GraphBarHeight(int yMax, int value) 
+        public int GraphBarHeight(int yMax, int value)
         {
             //Available height is the whole graph height minus the height space used by the X-Axis labels
             double height = GraphHeight - GraphXAxisHeight;
@@ -157,16 +159,16 @@ namespace SynoAI.Models
         /// <summary>
         /// Since Y axis shows 'NumberOfSteps' reference values, if there are less than GraphYSteps snapshots, we need to adjust way of displaying the y-axis ref
         /// </summary>
-        public String YStepping(int yMax, int Step) 
+        public String YStepping(int yMax, int Step)
         {
             double yValue = yMax;
             yValue /= GraphYSteps;
-            yValue = Math.Round(yValue); 
+            yValue = Math.Round(yValue);
 
             //Y axis label results being a minimal reasonable number, or it is just the first step (top number, max value) so use it!
-            if (yValue > 1 || Step == 1)
-            {        
-                yValue *= (Step -1);
+            if (yValue > 1 || Step == 1)
+            {
+                yValue *= (Step - 1);
                 yValue = yMax - yValue;
                 return yValue.ToString();
             }

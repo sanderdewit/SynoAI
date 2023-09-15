@@ -2,7 +2,6 @@
 using SynoAI.App;
 using SynoAI.Models;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace SynoAI.AIs.AIProcessor
 {
@@ -58,7 +57,7 @@ namespace SynoAI.AIs.AIProcessor
                     }
                     else
                     {
-                        logger.LogWarning("{cameraName}: {AIType}: Failed with unknown error.", 
+                        logger.LogWarning("{cameraName}: {AIType}: Failed with unknown error.",
                             camera.Name,
                             this.AIType);
                     }
@@ -105,7 +104,7 @@ namespace SynoAI.AIs.AIProcessor
         /// <returns>A usable object.</returns>
         private static async Task<AIProcessorResponse> GetResponse(ILogger logger, Camera camera, HttpResponseMessage message, AIType aiType)
         {
-            string content = await message.Content.ReadAsStringAsync();                
+            string content = await message.Content.ReadAsStringAsync();
             logger.LogDebug("{cameraName}: {AIType}: Responded with {content}.",
                 camera.Name,
                 aiType,
