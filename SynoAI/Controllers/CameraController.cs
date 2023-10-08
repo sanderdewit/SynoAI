@@ -432,10 +432,11 @@ namespace SynoAI.Controllers
                     Config.DaysToKeepCaptures);
                 Task.Run(() =>
                 {
+                try
+                {
                     lock (_cleanUpOldImagesLock)
                     {
                         _cleanupOldImagesRunning = true;
-
                         DirectoryInfo directory = new(Constants.DIRECTORY_CAPTURES);
                         IEnumerable<FileInfo> files = directory.GetFiles("*", new EnumerationOptions() { RecurseSubdirectories = true });
                         foreach (FileInfo file in files)
@@ -443,15 +444,19 @@ namespace SynoAI.Controllers
                             double age = (DateTime.Now - file.CreationTime).TotalDays;
                             if (age > Config.DaysToKeepCaptures)
                             {
-                                _logger.LogInformation("Captures Clean Up: {fileFullName} is {age} day(s) old and will be deleted.",
-                                    file.FullName,
-                                    age);
+                                _logger.LogInformation("Captures Clean Up: {file.FullName} is {age} day(s) old and will be deleted.",
+                                    file.FullName, age);
                                 System.IO.File.Delete(file.FullName);
-                                _logger.LogInformation("Captures Clean Up: {fileFullName} deleted.",
-                                    file.FullName);
+                                _logger.LogInformation("Captures Clean Up: {file.FullName} deleted.",
+                                   file.FullName);
                             }
                         }
                         _cleanupOldImagesRunning = false;
+                    }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Captures Clean Up Failed");
                     }
                 });
             }

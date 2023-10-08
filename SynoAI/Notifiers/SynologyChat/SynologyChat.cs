@@ -25,7 +25,7 @@ namespace SynoAI.Notifiers.SynologyChat
                 camera.Name);
             using HttpClient client = new();
             IEnumerable<string> foundTypes = notification.FoundTypes;
-            string message = GetMessage(camera, foundTypes, new List<AIPrediction>());
+            string message = GetMessage(camera, notification.FoundTypes, notification.ValidPredictions.ToList());
 
 
             var request = new

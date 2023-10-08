@@ -77,7 +77,7 @@ namespace SynoAI.Notifiers.Pushbullet
                     Type = uploadSuccess ? "file" : "note",
                     Title = $"{camera.Name}: Movement Detected",
                     //Body = GetMessage(camera, notification.FoundTypes, errorMessage: uploadError),
-                    Body = GetMessage(camera, notification.FoundTypes, new List<AIPrediction>(), errorMessage: uploadError),
+                Body = GetMessage(camera, notification.FoundTypes, notification.ValidPredictions.ToList(), errorMessage: uploadError),
                     FileName = uploadSuccess ? uploadRequestResult.FileName : null,
                     FileUrl = uploadSuccess ? uploadRequestResult.FileUrl : null,
                     FileType = uploadSuccess ? uploadRequestResult.FileType : null

@@ -42,7 +42,7 @@ namespace SynoAI.Notifiers.Telegram
                     TelegramBotClient bot = new(Token);
 
                     //string message = GetMessage(camera, foundTypes);
-                    string message = GetMessage(camera, foundTypes, new List<AIPrediction>());
+                    string message = GetMessage(camera, notification.FoundTypes, notification.ValidPredictions.ToList());
 
                     if (string.IsNullOrWhiteSpace(PhotoBaseURL))
                     {
