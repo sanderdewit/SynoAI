@@ -176,7 +176,7 @@ namespace SynoAI.Controllers
                     int maxSizeX = camera.GetMaxSizeX();
                     int maxSizeY = camera.GetMaxSizeY();
 
-                    List<AIPrediction> validPredictions = [];
+                    List<AIPrediction> validPredictions = new();
                     foreach (AIPrediction prediction in predictions)
                     {
                         // Check if the prediction label is in the list of types the camera is looking for
@@ -544,7 +544,7 @@ namespace SynoAI.Controllers
                     (x.Types == null || !x.Types.Any() || x.Types.Any(t => labels.Contains(t, StringComparer.OrdinalIgnoreCase)))
                 ).ToList();
 
-            List<Task> tasks = [];
+            List<Task> tasks = new();
             foreach (INotifier notifier in notifiers)
             {
                 tasks.Add(notifier.SendAsync(camera, notification, _logger));
