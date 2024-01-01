@@ -5,7 +5,7 @@
         public override INotifier Create(ILogger logger, IConfigurationSection section)
         {
             string url = section.GetValue<string>("Url");
-            logger.LogInformation("Processing Discord Config", url);
+            logger.LogInformation("Processing Discord Config. Url: {url}", url);
 
             return new Discord()
             {

@@ -11,7 +11,7 @@ namespace SynoAI.Controllers
     /// </summary>
     public class HomeController : Controller
     {
-        static readonly string[] byteSizes = { "bytes", "Kb", "Mb", "Gb", "Tb" };
+        static readonly string[] byteSizes = ["bytes", "Kb", "Mb", "Gb", "Tb"];
 
         /// <summary>
         /// Called by the user from web browser - General view (up to 24 latest hours)
@@ -94,7 +94,7 @@ namespace SynoAI.Controllers
                 using var memoryStream = new MemoryStream(originalSnapshot);
 
                 // Second, convert it into a bitmap for resizing
-                using var originalImage = new Bitmap(memoryStream);
+                using Bitmap originalImage = new(memoryStream);
 
                 //Get image ratio from original bitmap width and Height: 
                 double ratio = (double)originalImage.Width / (double)originalImage.Height;
@@ -142,7 +142,7 @@ namespace SynoAI.Controllers
 
                 //Retrieve Snapshots and order it in descending Creation DateTime (most up-to-date first)
                 var dir = new DirectoryInfo(directory);
-                FileInfo[] snapshots = dir.GetFiles().OrderByDescending(p => p.CreationTime).ToArray();
+                FileInfo[] snapshots = [.. dir.GetFiles().OrderByDescending(p => p.CreationTime)];
 
                 //User is asking for global 24 hours report, so I also meter the general storage / snapshots / hours counters.
                 if (!GraphHour)
@@ -222,14 +222,14 @@ namespace SynoAI.Controllers
         /// </summary>
         public static List<String> GetSnapshots(string cameraName, DateTime date)
         {
-            List<String> files = new();
+            List<String> files = [];
             string directory = Path.Combine(Constants.DIRECTORY_CAPTURES, cameraName);
 
             if (Directory.Exists(directory))
             {
                 //Retrieve Snapshots and order it in descending Creation DateTime (most up-to-date first)
                 var dir = new DirectoryInfo(directory);
-                FileInfo[] snapshots = dir.GetFiles().OrderByDescending(p => p.CreationTime).ToArray();
+                FileInfo[] snapshots = [.. dir.GetFiles().OrderByDescending(p => p.CreationTime)];
 
                 foreach (FileInfo snapshot in snapshots)
                 {

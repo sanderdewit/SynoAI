@@ -123,7 +123,7 @@ namespace SynoAI.Controllers
                 if (camera.Wait > 0)
                 {
                     _logger.LogInformation("{id}: Waiting for {camera.Wait}ms before fetching snapshot.",
-                        id);
+                        id, camera.Wait);
                     await Task.Delay(camera.Wait);
                 }
 
@@ -176,7 +176,7 @@ namespace SynoAI.Controllers
                     int maxSizeX = camera.GetMaxSizeX();
                     int maxSizeY = camera.GetMaxSizeY();
 
-                    List<AIPrediction> validPredictions = new();
+                    List<AIPrediction> validPredictions = [];
                     foreach (AIPrediction prediction in predictions)
                     {
                         // Check if the prediction label is in the list of types the camera is looking for
@@ -462,7 +462,7 @@ namespace SynoAI.Controllers
             }
         }
         private bool _cleanupOldImagesRunning;
-        private object _cleanUpOldImagesLock = new();
+        private readonly object _cleanUpOldImagesLock = new();
 
         /// <summary>
         /// Handles any required preprocessing of the captured image.
@@ -544,7 +544,7 @@ namespace SynoAI.Controllers
                     (x.Types == null || !x.Types.Any() || x.Types.Any(t => labels.Contains(t, StringComparer.OrdinalIgnoreCase)))
                 ).ToList();
 
-            List<Task> tasks = new();
+            List<Task> tasks = [];
             foreach (INotifier notifier in notifiers)
             {
                 tasks.Add(notifier.SendAsync(camera, notification, _logger));
