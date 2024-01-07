@@ -1,5 +1,10 @@
-# UPDATE 2023-08-29
-I've begun working on a new version of SynoAI from the ground up which has an administrative interface instead of a config based approach. I will also be taking the opportunity to implement a number of requested features that have been requested for a long time. 
+# UPDATE 2024-01-07
+Based on the repo of djdd87, but I made some moditications such as:
+- updated depedencies and packages
+- updated to dotnet 8
+- included percentages of detection in push notifications
+- resolved warnings from visual studio
+
 
 # SynoAI
 A Synology Surveillance Station notification system utilising DeepStack AI, inspired by Christopher Adams' [sssAI](https://github.com/Christofo/sssAI) implementation.
