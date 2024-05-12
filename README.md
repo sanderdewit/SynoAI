@@ -1,10 +1,10 @@
 # UPDATE 2024-01-07
 Based on the repo of djdd87, but I made some moditications such as:
-- updated depedencies and packages
+- updated depedencies and packages (as vulnerable packages were present)
 - updated to dotnet 8
 - included percentages of detection in push notifications
 - resolved warnings from visual studio
-
+- default docker config is now port 8080 as port 80 is a privilged port.
 
 # SynoAI
 A Synology Surveillance Station notification system utilising DeepStack AI, inspired by Christopher Adams' [sssAI](https://github.com/Christofo/sssAI) implementation.
