@@ -40,16 +40,13 @@ jobs:
         fi
 
     - name: Commit and Push Changes
+      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        if [ "${{ env.PACKAGES_UPDATED }}" == "true" ]; then 
           git add .
           git commit -m "Update NuGet packages"
           git push
-        else
-          echo "No changes to commit."
-        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
