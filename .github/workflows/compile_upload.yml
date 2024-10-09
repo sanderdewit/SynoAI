@@ -64,3 +64,24 @@ jobs:
 
     - name: Debug Output  # Debug step to log the value of packages_updated
       run: echo "Packages Updated:" ${{ steps.check_packages.outputs.packages_updated }}
+
+  publish:
+    needs: build
+    if: ${{ needs.build.outputs.packages_updated == 'true' }}  # Only run if packages were updated
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build the Docker image
+      run: docker build -t dewitauto/synoai-fork:latest SynoAI
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Publish the Docker image
+      run: docker push dewitauto/synoai-fork:latest
