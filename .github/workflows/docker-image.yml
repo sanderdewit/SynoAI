@@ -1,6 +1,6 @@
 name: Publish Latest Image
 
-# Only trigger, when the build workflow succeeded
+# Only trigger when the build workflow succeeded
 on:
   workflow_run:
     workflows: ["Build"]
@@ -8,19 +8,22 @@ on:
       - completed
 
 jobs:
-
-  build:
+  publish:
+    if: ${{ needs.build.outputs.packages_updated == 'true' }}  # Only run if packages were updated
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Build the Docker image
       run: docker build -t dewitauto/synoai-fork:latest SynoAI
+
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
     - name: Publish the Docker image
       run: docker push dewitauto/synoai-fork:latest
