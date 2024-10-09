@@ -9,7 +9,7 @@ on:
 
 jobs:
   publish:
-    if: ${{ needs.build.outputs.packages_updated == 'true' }}  # Only run if packages were updated
+    if: ${{ needs.Build.outputs.packages_updated == 'true' }}  # Only run if packages were updated
 
     runs-on: ubuntu-latest
 
