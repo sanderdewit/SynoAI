@@ -13,7 +13,7 @@ jobs:
 
     runs-on: ubuntu-latest
     outputs:
-      packages_updated: ${{ steps.check_packages.outputs.updated }}  # Output to share with the next workflow
+      packages_updated: ${{ steps.check_packages.outputs.updated }}  # Reference the output here
 
     steps:
     - uses: actions/checkout@v4
@@ -32,12 +32,10 @@ jobs:
         dotnet outdated --upgrade
         if [ -n "$(git status --porcelain)" ]; then
           echo "Packages updated."
-          echo "true" > packages_updated.txt
-          echo "::set-output name=updated::true"  # Set output variable
+          echo "true" >> $GITHUB_ENV  # Use environment file to set updated status
         else
           echo "No package updates."
-          echo "false" > packages_updated.txt
-          echo "::set-output name=updated::false"  # Set output variable
+          echo "false" >> $GITHUB_ENV  # Use environment file to set updated status
         fi
 
     - name: Commit and Push Changes
