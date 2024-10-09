@@ -63,3 +63,6 @@ jobs:
     - name: Test
       if: env.packages_updated == 'true'  # Use environment variable for the condition
       run: dotnet test --no-build --verbosity normal
+
+    - name: Debug Output  # Debug step to log the value of packages_updated
+      run: echo "Packages Updated:" ${{ steps.check_packages.outputs.packages_updated }}
