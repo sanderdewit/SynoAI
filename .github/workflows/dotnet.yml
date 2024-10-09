@@ -23,6 +23,15 @@ jobs:
       run: dotnet tool install --global dotnet-outdated-tool
     - name: Update NuGet Packages
       run: dotnet outdated --upgrade
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        git add .
+        git commit -m "Update NuGet packages"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the provided token for authentication
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
