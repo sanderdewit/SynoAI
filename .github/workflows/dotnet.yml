@@ -2,7 +2,7 @@ name: Build
 
 on:
   schedule:
-    - cron: '0 0 10 * *'  # Runs on the 10th day of every month at midnight
+    - cron: '15 2 8/14 * *'  # Runs on the 8th day, repeat every 14 days at 02:15 (prevent 00:00 as capacity of Github might be reduced)
   push:
     branches: [ main ]
   pull_request:
@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      packages_updated: ${{ env.packages_updated }}  # Reference the output here
+      packages_updated: ${{ steps.check_packages.output.packages_updated }}  # Reference the output here
 
     steps:
     - uses: actions/checkout@v4
@@ -31,19 +31,17 @@ jobs:
         dotnet outdated --upgrade
         if [ -n "$(git status --porcelain)" ]; then
           echo "Packages updated."
-          echo "packages_updated=true"  # Set the output variable
-          echo "packages_updated=true" >> $GITHUB_ENV  # Set environment variable
+          echo "packages_updated=true" >> $GITHUB_OUTPUT  # Set environment variable
         else
           echo "No package updates."
-          echo "packages_updated=false"  # Set the output variable
-          echo "packages_updated=false" >> $GITHUB_ENV  # Set environment variable
+          echo "packages_updated=false" >> $GITHUB_OUTPUT  # Set environment variable
         fi
 
     - name: Commit and Push Changes
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        if [ "${{ env.packages_updated }}" == "true" ]; then 
+        if [ "${{ steps.check_packages.output.packages_updated }}" == "true" ]; then 
           git add .
           git commit -m "Update NuGet packages"
           git push
@@ -57,12 +55,12 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      if: env.packages_updated == 'true'  # Use environment variable for the condition
+      if: steps.check_packages.output.packages_updated == 'true'  # Use environment variable for the condition
       run: dotnet build --no-restore
 
     - name: Test
-      if: env.packages_updated == 'true'  # Use environment variable for the condition
+      if: steps.check_packages.output.packages_updated == 'true'  # Use environment variable for the condition
       run: dotnet test --no-build --verbosity normal
 
     - name: Debug Output  # Debug step to log the value of packages_updated
-      run: echo "Packages Updated:" ${{ env.packages_updated }}
+      run: echo "Packages Updated:" ${{ steps.check_packages.output.packages_updated }}
