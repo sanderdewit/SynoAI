@@ -1,6 +1,8 @@
 name: Build
 
 on:
+  schedule:
+    - cron: '0 0 10 * *'  # Runs on the first day of every month at midnight
   push:
     branches: [ main ]
   pull_request:
