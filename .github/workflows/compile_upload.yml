@@ -55,11 +55,11 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      if: steps.check_packages.output.packages_updated == 'true'  # Use environment variable for the condition
+      if: ${{ steps.check_packages.outputs.packages_updated == 'true' }}  # Use outputs for the condition
       run: dotnet build --no-restore
 
     - name: Test
-      if: steps.check_packages.output.packages_updated == 'true'  # Use environment variable for the condition
+      if: ${{ steps.check_packages.outputs.packages_updated == 'true' }}  # Use outputs for the condition
       run: dotnet test --no-build --verbosity normal
 
     - name: Debug Output  # Debug step to log the value of packages_updated
