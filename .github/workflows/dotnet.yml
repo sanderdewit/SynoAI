@@ -2,7 +2,7 @@ name: Build
 
 on:
   schedule:
-    - cron: '0 0 10 * *'  # Runs on the first day of every month at midnight
+    - cron: '0 0 10 * *'  # Runs on the 10th day of every month at midnight
   push:
     branches: [ main ]
   pull_request:
@@ -12,29 +12,55 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    outputs:
+      packages_updated: ${{ steps.check_packages.outputs.updated }}  # Output to share with the next workflow
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: Install dotnet-outdated
       run: dotnet tool install --global dotnet-outdated-tool
+
     - name: Update NuGet Packages
-      run: dotnet outdated --upgrade
+      id: check_packages  # Give this step an ID to reference its outputs
+      run: |
+        dotnet outdated --upgrade
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "Packages updated."
+          echo "true" > packages_updated.txt
+          echo "::set-output name=updated::true"  # Set output variable
+        else
+          echo "No package updates."
+          echo "false" > packages_updated.txt
+          echo "::set-output name=updated::false"  # Set output variable
+        fi
+
     - name: Commit and Push Changes
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        git add .
-        git commit -m "Update NuGet packages"
-        git push
+        if [ "$(cat packages_updated.txt)" == "true" ]; then
+          git add .
+          git commit -m "Update NuGet packages"
+          git push
+        else
+          echo "No changes to commit."
+        fi
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the provided token for authentication
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
+      if: steps.check_packages.outputs.updated == 'true'  # Only run if packages were updated
       run: dotnet build --no-restore
+
     - name: Test
+      if: steps.check_packages.outputs.updated == 'true'  # Only run if packages were updated
       run: dotnet test --no-build --verbosity normal
