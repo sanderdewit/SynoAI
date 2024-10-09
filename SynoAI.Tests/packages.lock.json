@@ -101,10 +101,10 @@
       },
       "MailKit": {
         "type": "Transitive",
-        "resolved": "4.7.1.1",
-        "contentHash": "Y3okmIxu8g/ZcoJiE2i+dCeKgnNyddsXmcJslZnCPGVPP0aRyeVINHV1h97V+OVMdqjQI6O12J2p8Duwq5UEqQ==",
+        "resolved": "4.8.0",
+        "contentHash": "zZ1UoM4FUnSFUJ9fTl5CEEaejR0DNP6+FDt1OfXnjg4igZntcir1tg/8Ufd6WY5vrpmvToAjluYqjVM24A+5lA==",
         "dependencies": {
-          "MimeKit": "4.7.1",
+          "MimeKit": "4.8.0",
           "System.Formats.Asn1": "8.0.1"
         }
       },
@@ -157,8 +157,8 @@
       },
       "MimeKit": {
         "type": "Transitive",
-        "resolved": "4.7.1",
-        "contentHash": "Qoj4aVvhX14A1FNvaJ33hzOP4VZI2j+Mr38I9wSGcjMq4BYDtWLJG89aJ9nRW2cNfH6Czjwyp7+Mh++xv3AZvg==",
+        "resolved": "4.8.0",
+        "contentHash": "U24wp4LKED+sBRzyrWICE+3bSwptsTrPOcCIXbW5zfeThCNzQx5NCo8Wus+Rmi+EUkQrCwlI/3sVfejeq9tuxQ==",
         "dependencies": {
           "BouncyCastle.Cryptography": "2.4.0",
           "System.Formats.Asn1": "8.0.1",
@@ -821,7 +821,7 @@
         "type": "Project",
         "dependencies": {
           "MQTTnet": "[4.3.7.1207, )",
-          "MailKit": "[4.7.1.1, )",
+          "MailKit": "[4.8.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.21.0, )",
           "Newtonsoft.Json": "[13.0.3, )",
           "SkiaSharp": "[2.88.8, )",
