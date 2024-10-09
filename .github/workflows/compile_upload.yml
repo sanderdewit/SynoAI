@@ -62,9 +62,6 @@ jobs:
       if: ${{ steps.check_packages.outputs.packages_updated == 'true' }}  # Use outputs for the condition
       run: dotnet test --no-build --verbosity normal
 
-    - name: Debug Output  # Debug step to log the value of packages_updated
-      run: echo "Packages Updated:" ${{ steps.check_packages.outputs.packages_updated }}
-
   publish:
     needs: build
     if: ${{ needs.build.outputs.packages_updated == 'true' }}  # Only run if packages were updated
