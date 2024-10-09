@@ -31,9 +31,11 @@ jobs:
         dotnet outdated --upgrade
         if [ -n "$(git status --porcelain)" ]; then
           echo "Packages updated."
+          echo "PACKAGES_UPDATED=true" >> $GITHUB_ENV
           echo "packages_updated=true" >> $GITHUB_OUTPUT  # Set environment variable
         else
           echo "No package updates."
+          echo "PACKAGES_UPDATED=false" >> $GITHUB_ENV
           echo "packages_updated=false" >> $GITHUB_OUTPUT  # Set environment variable
         fi
 
@@ -41,7 +43,7 @@ jobs:
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        if [ "${{ steps.check_packages.outputs.packages_updated }}" == "true" ]; then 
+        if [ "${{ env.packages_updated }}" == "true" ]; then 
           git add .
           git commit -m "Update NuGet packages"
           git push
@@ -55,11 +57,11 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      if: ${{ steps.check_packages.outputs.packages_updated == 'true' }}  # Use outputs for the condition
+      if: ${{ env.packages_updated == 'true' }}  # Use outputs for the condition
       run: dotnet build --no-restore
 
     - name: Test
-      if: ${{ steps.check_packages.outputs.packages_updated == 'true' }}  # Use outputs for the condition
+      if: ${{ env.packages_updated == 'true' }}  # Use outputs for the condition
       run: dotnet test --no-build --verbosity normal
 
   publish:
