@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      packages_updated: ${{ steps.check_packages.output.packages_updated }}  # Reference the output here
+      packages_updated: ${{ steps.check_packages.outputs.packages_updated }}  # Reference the output here
 
     steps:
     - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        if [ "${{ steps.check_packages.output.packages_updated }}" == "true" ]; then 
+        if [ "${{ steps.check_packages.outputs.packages_updated }}" == "true" ]; then 
           git add .
           git commit -m "Update NuGet packages"
           git push
