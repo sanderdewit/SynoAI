@@ -31,9 +31,11 @@ jobs:
         dotnet outdated --upgrade
         if [ -n "$(git status --porcelain)" ]; then
           echo "Packages updated."
+          echo "packages_updated=true"  # Set the output variable
           echo "packages_updated=true" >> $GITHUB_ENV  # Set environment variable
         else
           echo "No package updates."
+          echo "packages_updated=false"  # Set the output variable
           echo "packages_updated=false" >> $GITHUB_ENV  # Set environment variable
         fi
 
