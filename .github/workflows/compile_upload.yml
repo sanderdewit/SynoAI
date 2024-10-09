@@ -43,7 +43,7 @@ jobs:
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        if [ "${{ env.packages_updated }}" == "true" ]; then 
+        if [ "${{ env.PACKAGES_UPDATED }}" == "true" ]; then 
           git add .
           git commit -m "Update NuGet packages"
           git push
@@ -54,14 +54,15 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Restore dependencies
+      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: dotnet restore
 
     - name: Build
-      if: ${{ env.packages_updated == 'true' }}  # Use outputs for the condition
+      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: dotnet build --no-restore
 
     - name: Test
-      if: ${{ env.packages_updated == 'true' }}  # Use outputs for the condition
+      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: dotnet test --no-build --verbosity normal
 
   publish:
