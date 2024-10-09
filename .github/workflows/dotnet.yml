@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      packages_updated: ${{ steps.check_packages.outputs.packages_updated }}  # Reference the output here
+      packages_updated: ${{ env.packages_updated }}  # Reference the output here
 
     steps:
     - uses: actions/checkout@v4
@@ -65,4 +65,4 @@ jobs:
       run: dotnet test --no-build --verbosity normal
 
     - name: Debug Output  # Debug step to log the value of packages_updated
-      run: echo "Packages Updated:" ${{ steps.check_packages.outputs.packages_updated }}
+      run: echo "Packages Updated:" ${{ env.packages_updated }}
