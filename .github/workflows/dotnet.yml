@@ -10,10 +10,9 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     outputs:
-      packages_updated: ${{ steps.check_packages.outputs.updated }} 
+      packages_updated: ${{ steps.check_packages.outputs.packages_updated }}  # Reference the output here
 
     steps:
     - uses: actions/checkout@v4
@@ -32,17 +31,17 @@ jobs:
         dotnet outdated --upgrade
         if [ -n "$(git status --porcelain)" ]; then
           echo "Packages updated."
-          echo "PACKAGES_UPDATED=true" >> $GITHUB_ENV
+          echo "packages_updated=true" >> $GITHUB_ENV  # Set environment variable
         else
           echo "No package updates."
-          echo "PACKAGES_UPDATED=false" >> $GITHUB_ENV
+          echo "packages_updated=false" >> $GITHUB_ENV  # Set environment variable
         fi
 
     - name: Commit and Push Changes
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        if [ "${{ env.PACKAGES_UPDATED }}" == "true" ]; then 
+        if [ "${{ env.packages_updated }}" == "true" ]; then 
           git add .
           git commit -m "Update NuGet packages"
           git push
@@ -56,9 +55,9 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      if: env.PACKAGES_UPDATED == 'true'
+      if: env.packages_updated == 'true'  # Use environment variable for the condition
       run: dotnet build --no-restore
 
     - name: Test
-      if: env.PACKAGES_UPDATED == 'true'
+      if: env.packages_updated == 'true'  # Use environment variable for the condition
       run: dotnet test --no-build --verbosity normal
