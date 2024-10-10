@@ -70,59 +70,59 @@ namespace SynoAI.Controllers
         }
 
 
-        /// <summary>
-        /// Return snapshot image as JPEG, either in original size or a scaled down version, if asked.
-        /// In order to use System.Drawing.Common
-        /// In Terminal, issue: dotnet add SynoAI package System.Drawing.Common
-        /// </summary>
-        [Route("{cameraName}/{filename}/{width}")]
-        [Route("{cameraName}/{filename}")]
-        public ActionResult Snapshot(string cameraName, string filename, int width = 0)
-        {
-            // Reconstruct the path to the actual snapshot inside the NAS 
-            string path = Path.Combine(Constants.DIRECTORY_CAPTURES, cameraName);
-            path = Path.Combine(path, filename);
+        ///// <summary>
+        ///// Return snapshot image as JPEG, either in original size or a scaled down version, if asked.
+        ///// In order to use System.Drawing.Common
+        ///// In Terminal, issue: dotnet add SynoAI package System.Drawing.Common
+        ///// </summary>
+        //[Route("{cameraName}/{filename}/{width}")]
+        //[Route("{cameraName}/{filename}")]
+        //public ActionResult Snapshot(string cameraName, string filename, int width = 0)
+        //{
+        //    // Reconstruct the path to the actual snapshot inside the NAS 
+        //    string path = Path.Combine(Constants.DIRECTORY_CAPTURES, cameraName);
+        //    path = Path.Combine(path, filename);
 
-            // Grab the original Snapshot
-            byte[] originalSnapshot = System.IO.File.ReadAllBytes(path);
+        //    // Grab the original Snapshot
+        //    byte[] originalSnapshot = System.IO.File.ReadAllBytes(path);
 
-            if (width != 0)
-            {
-                // New (reduced) width specified: Scale down the original snapshot
+        //    if (width != 0)
+        //    {
+        //        // New (reduced) width specified: Scale down the original snapshot
 
-                // First retrieve the original Snapshot
-                using var memoryStream = new MemoryStream(originalSnapshot);
+        //        // First retrieve the original Snapshot
+        //        using var memoryStream = new MemoryStream(originalSnapshot);
 
-                // Second, convert it into a bitmap for resizing
-                using var originalImage = new Bitmap(memoryStream);
+        //        // Second, convert it into a bitmap for resizing
+        //        using var originalImage = new Bitmap(memoryStream);
 
-                //Get image ratio from original bitmap width and Height: 
-                double ratio = (double)originalImage.Width / (double)originalImage.Height;
+        //        //Get image ratio from original bitmap width and Height: 
+        //        double ratio = (double)originalImage.Width / (double)originalImage.Height;
 
-                // Calculate new height based on that ratio and the new reduced width.
-                ratio = width / ratio;
-                int height = (int)Math.Floor(ratio);
+        //        // Calculate new height based on that ratio and the new reduced width.
+        //        ratio = width / ratio;
+        //        int height = (int)Math.Floor(ratio);
 
-                //Create a resized bitmap image
-                var resized = new Bitmap(width, height);
-                using var graphics = Graphics.FromImage(resized);
-                graphics.CompositingQuality = CompositingQuality.HighSpeed;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.CompositingMode = CompositingMode.SourceCopy;
+        //        //Create a resized bitmap image
+        //        var resized = new Bitmap(width, height);
+        //        using var graphics = Graphics.FromImage(resized);
+        //        graphics.CompositingQuality = CompositingQuality.HighSpeed;
+        //        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        //        graphics.CompositingMode = CompositingMode.SourceCopy;
 
-                graphics.DrawImage(originalImage, 0, 0, width, height);
+        //        graphics.DrawImage(originalImage, 0, 0, width, height);
 
-                //Convert resized image into jpeg and return
-                using var stream = new MemoryStream();
-                resized.Save(stream, ImageFormat.Jpeg);
-                return File(stream.ToArray(), "image/jpeg");
-            }
-            else
-            {
-                // Width 0 means full-size, just return the original fetched image.
-                return File(originalSnapshot, "image/jpeg");
-            }
-        }
+        //        //Convert resized image into jpeg and return
+        //        using var stream = new MemoryStream();
+        //        resized.Save(stream, ImageFormat.Jpeg);
+        //        return File(stream.ToArray(), "image/jpeg");
+        //    }
+        //    else
+        //    {
+        //        // Width 0 means full-size, just return the original fetched image.
+        //        return File(originalSnapshot, "image/jpeg");
+        //    }
+        //}
 
 
         /// <summary>
