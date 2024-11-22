@@ -20,7 +20,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.x
 
     - name: Install dotnet-outdated
       run: dotnet tool install --global dotnet-outdated-tool
@@ -72,7 +72,9 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build the Docker image
-      run: docker build -t dewitauto/synoai-fork:latest SynoAI
+      #run: docker build -t dewitauto/synoai-fork:latest SynoAI
+      run: docker build --build-arg DOTNET_VERSION=9.0 -t dewitauto/synoai-fork:latest SynoAI
+
 
     - name: Login to Docker Hub
       uses: docker/login-action@v3
