@@ -161,7 +161,7 @@
       },
       "SkiaSharp.NativeAssets.Win32": {
         "type": "Transitive",
-        "resolved": "3.116.1",
+        "resolved": "3.116.0",
         "contentHash": "dRQ75MCI8oz6zAs2Y1w6pq6ARs4MhdNG+gf3doOxOxdnueDXffQLGQIxON54GDoxc0WjKOoHMKBR4DhaduwwQw=="
       },
       "Swashbuckle.AspNetCore.Swagger": {
