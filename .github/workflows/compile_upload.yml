@@ -51,21 +51,17 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Restore dependencies
-      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: dotnet restore
 
     - name: Build
-      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: dotnet build --no-restore
 
     - name: Test
-      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
       run: dotnet test --no-build --verbosity normal
 
   publish:
     needs: build
-    if: ${{ needs.build.outputs.packages_updated == 'true' }}  # Only run if packages were updated
-
+    if: ${{ github.event_name != 'schedule' || needs.build.outputs.packages_updated == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
