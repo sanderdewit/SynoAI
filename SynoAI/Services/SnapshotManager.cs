@@ -97,19 +97,25 @@ namespace SynoAI.Services
                     // Draw background box for the text if required
                     SKTypeface typeface = SKTypeface.FromFamilyName(Config.Font);
 
+                    // Create the font object for font-related properties
+                    SKFont font = new()
+                    {
+                        Typeface = typeface,
+                        Size = Config.FontSize
+                    };
+
+                    // Create the paint object for other drawing properties
                     SKPaint paint = new()
                     {
-                        FilterQuality = SKFilterQuality.High,
                         IsAntialias = true,
-                        Color = GetColour(Config.FontColor),
-                        TextSize = Config.FontSize,
-                        Typeface = typeface
+                        Color = GetColour(Config.FontColor)
                     };
 
                     string textBoxColor = Config.TextBoxColor;
                     if (!string.IsNullOrWhiteSpace(textBoxColor) && !textBoxColor.Equals(SKColors.Transparent.ToString(), StringComparison.OrdinalIgnoreCase))
                     {
-                        float textWidth = paint.MeasureText(label);
+                        // Use SKFont to measure text width
+                        float textWidth = font.MeasureText(label);
                         float textBoxWidth = textWidth + (Config.TextOffsetX * 2);
                         float textBoxHeight = Config.FontSize + (Config.TextOffsetY * 2);
 
@@ -129,9 +135,8 @@ namespace SynoAI.Services
                         });
                     }
 
-                    // Draw the text
-                    SKFont font = new(typeface, Config.FontSize);
-                    canvas.DrawText(label, x, y, paint);
+                    // Draw the text using the previously defined font
+                    canvas.DrawText(label, x, y, font, paint);
                 }
             }
 
