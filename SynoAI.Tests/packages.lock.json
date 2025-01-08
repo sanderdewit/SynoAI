@@ -4,9 +4,9 @@
     "net9.0": {
       "coverlet.collector": {
         "type": "Direct",
-        "requested": "[6.0.2, )",
-        "resolved": "6.0.2",
-        "contentHash": "bJShQ6uWRTQ100ZeyiMqcFlhP7WJ+bCuabUs885dJiBEzMsJMSFr7BOyeCw4rgvQokteGi5rKQTlkhfQPUXg2A=="
+        "requested": "[6.0.3, )",
+        "resolved": "6.0.3",
+        "contentHash": "SvLbRq7gjzE34BI90vP6ge812+PAjinNoKhdFZHwVEu/ozJgZY+0KyDh1K0teDeMeuzQJuF8OvleRBYXsZDz0A=="
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
@@ -214,8 +214,8 @@
       },
       "MQTTnet": {
         "type": "Transitive",
-        "resolved": "4.3.7.1207",
-        "contentHash": "ah7aHXoedWp5m5a4zy2u4phOEVj0QFYzOb5tFKQeV8RRBrxp+1QREF4ymZuG8D+hzB2dhtrrG81WxTFv0PzOeQ=="
+        "resolved": "5.0.1.1416",
+        "contentHash": "ONYieEMaHiIei5dAtHXywnfJGhmrd5Av5sNJSQERp6AtZdPk3xxjCR6Cv0C5RUr/XbLeHO4/HQ0Rc2bQ5NF5Mw=="
       },
       "Newtonsoft.Json": {
         "type": "Transitive",
@@ -817,8 +817,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.2.0",
-        "contentHash": "Ff4K8dtREbEGHRN500b/tDPHXouh0d0+X4aZqVyC9So1u66gn7Il6miqBgurDwDASSx10LMN9cJRidwf+fgXoQ==",
+        "resolved": "22.3.0",
+        "contentHash": "5qIvT5/YIxkKK6mJq4Vz0w106HqjXPc8qzMxcQgkGNQrwgRK1hbbe7yp4veYLEVjzGfWyrHsAezWFdlNUbUAow==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
@@ -867,7 +867,7 @@
       "synoai": {
         "type": "Project",
         "dependencies": {
-          "MQTTnet": "[4.3.7.1207, )",
+          "MQTTnet": "[5.0.1.1416, )",
           "MailKit": "[4.9.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.21.0, )",
           "Newtonsoft.Json": "[13.0.3, )",
@@ -875,7 +875,7 @@
           "SkiaSharp.NativeAssets.Linux": "[3.116.1, )",
           "Swashbuckle.AspNetCore": "[7.2.0, )",
           "System.Drawing.Common": "[9.0.0, )",
-          "Telegram.Bot": "[22.2.0, )"
+          "Telegram.Bot": "[22.3.0, )"
         }
       }
     }

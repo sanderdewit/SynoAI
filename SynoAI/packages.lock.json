@@ -20,9 +20,9 @@
       },
       "MQTTnet": {
         "type": "Direct",
-        "requested": "[4.3.7.1207, )",
-        "resolved": "4.3.7.1207",
-        "contentHash": "ah7aHXoedWp5m5a4zy2u4phOEVj0QFYzOb5tFKQeV8RRBrxp+1QREF4ymZuG8D+hzB2dhtrrG81WxTFv0PzOeQ=="
+        "requested": "[5.0.1.1416, )",
+        "resolved": "5.0.1.1416",
+        "contentHash": "ONYieEMaHiIei5dAtHXywnfJGhmrd5Av5sNJSQERp6AtZdPk3xxjCR6Cv0C5RUr/XbLeHO4/HQ0Rc2bQ5NF5Mw=="
       },
       "Newtonsoft.Json": {
         "type": "Direct",
@@ -69,9 +69,9 @@
       },
       "Telegram.Bot": {
         "type": "Direct",
-        "requested": "[22.2.0, )",
-        "resolved": "22.2.0",
-        "contentHash": "Ff4K8dtREbEGHRN500b/tDPHXouh0d0+X4aZqVyC9So1u66gn7Il6miqBgurDwDASSx10LMN9cJRidwf+fgXoQ==",
+        "requested": "[22.3.0, )",
+        "resolved": "22.3.0",
+        "contentHash": "5qIvT5/YIxkKK6mJq4Vz0w106HqjXPc8qzMxcQgkGNQrwgRK1hbbe7yp4veYLEVjzGfWyrHsAezWFdlNUbUAow==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
