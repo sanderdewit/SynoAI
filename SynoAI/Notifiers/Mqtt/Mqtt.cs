@@ -1,5 +1,4 @@
 ﻿using MQTTnet;
-using MQTTnet.Client;
 using SynoAI.Models;
 
 namespace SynoAI.Notifiers.Mqtt
@@ -39,7 +38,7 @@ namespace SynoAI.Notifiers.Mqtt
 
         public Mqtt() : base()
         {
-            _client = (new MQTTnet.MqttFactory()).CreateMqttClient();
+            _client = (new MQTTnet.MqttClientFactory()).CreateMqttClient();
         }
 
         public override Task InitializeAsync(ILogger logger)
