@@ -90,9 +90,9 @@
       },
       "xunit.runner.visualstudio": {
         "type": "Direct",
-        "requested": "[3.0.1, )",
-        "resolved": "3.0.1",
-        "contentHash": "lbyYtsBxA8Pz8kaf5Xn/Mj1mL9z2nlBWdZhqFaj66nxXBa4JwiTDm4eGcpSMet6du9TOWI6bfha+gQR6+IHawg=="
+        "requested": "[3.0.2, )",
+        "resolved": "3.0.2",
+        "contentHash": "oXbusR6iPq0xlqoikjdLvzh+wQDkMv9If58myz9MEzldS4nIcp442Btgs2sWbYWV+caEluMe2pQCZ0hUZgPiow=="
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
@@ -101,10 +101,10 @@
       },
       "MailKit": {
         "type": "Transitive",
-        "resolved": "4.9.0",
-        "contentHash": "wRUVzYXRWbjdUixwtSp7ivVHPhWw17h+BvwIVaouBike68B56Xk9b5+QRT39EK/QN8XF7MtOgt9caHvUaCvhIQ==",
+        "resolved": "4.10.0",
+        "contentHash": "C6gwHQGHru2x/g1pzk0NXn5BIv0qoeKbSgb4BIFfWl4OjTZOEajSIR+O6i4WElsuJI8Z77LGr4rH5nVjypyvDQ==",
         "dependencies": {
-          "MimeKit": "4.9.0",
+          "MimeKit": "4.10.0",
           "System.Formats.Asn1": "8.0.1"
         }
       },
@@ -204,8 +204,8 @@
       },
       "MimeKit": {
         "type": "Transitive",
-        "resolved": "4.9.0",
-        "contentHash": "DZXXMZzmAABDxFhOSMb6SE8KKxcRd/sk1E6aJTUE5ys2FWOQhznYV2Gl3klaaSfqKn27hQ32haqquH1J8Z6kJw==",
+        "resolved": "4.10.0",
+        "contentHash": "GQofI17cH55XSh109hJmHaYMtSFqTX/eUek3UcV7hTnYayAIXZ6eHlv345tfdc+bQ/BrEnYOSZVzx9I3wpvvpg==",
         "dependencies": {
           "BouncyCastle.Cryptography": "2.5.0",
           "System.Formats.Asn1": "8.0.1",
@@ -868,7 +868,7 @@
         "type": "Project",
         "dependencies": {
           "MQTTnet": "[5.0.1.1416, )",
-          "MailKit": "[4.9.0, )",
+          "MailKit": "[4.10.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.21.0, )",
           "Newtonsoft.Json": "[13.0.3, )",
           "SkiaSharp": "[3.116.1, )",
