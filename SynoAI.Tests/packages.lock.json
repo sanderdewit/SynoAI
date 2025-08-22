@@ -90,9 +90,9 @@
       },
       "xunit.runner.visualstudio": {
         "type": "Direct",
-        "requested": "[3.1.3, )",
-        "resolved": "3.1.3",
-        "contentHash": "go7e81n/UI3LeNqoJIJ3thkS4JfJtiQnDbAxLh09JkJqoHthnfbLS5p68s4/Bm12B9umkoYSB5SaDr68hZNleg=="
+        "requested": "[3.1.4, )",
+        "resolved": "3.1.4",
+        "contentHash": "5mj99LvCqrq3CNi06xYdyIAXOEh+5b33F2nErCzI5zWiDdLHXiPXEWFSUAF8zlIv0ZWqjZNCwHTQeAPYbF3pCg=="
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
@@ -199,8 +199,8 @@
       },
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",
-        "resolved": "9.0.7",
-        "contentHash": "lFGY2aGgmMREPJEfOmZcA6v0CLjWVpcfNHRgqYMoSQhy80+GxhYqdW5xe+DCLrVqE1M7/0RpOkIo49/KH/cd/A=="
+        "resolved": "9.0.8",
+        "contentHash": "64oQBN8I8EOcyHGNt6+rlcqm4tlcKfqOpswtBCJZnpzBQ15L6IFKqjnbjbOWBpG9wKq9A/aC2LFSmSqplbwTYA=="
       },
       "MimeKit": {
         "type": "Transitive",
@@ -441,10 +441,10 @@
       },
       "System.Drawing.Common": {
         "type": "Transitive",
-        "resolved": "9.0.7",
-        "contentHash": "1k/Pk7hcM3vP2tfIRRS2ECCCN7ya+hvocsM1JMc4ZDCU6qw7yOuUmqmCDfgXZ4Q4FS6jass2EAai5ByKodDi0g==",
+        "resolved": "9.0.8",
+        "contentHash": "ineIJmF+yuBEHGft9R153J9kmBFaeEfFL5Put5nzENneRcGGPUb3MvM8zrZ5pERQ0jPPSE3Wqw/clXvOq2F/Kw==",
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "9.0.7"
+          "Microsoft.Win32.SystemEvents": "9.0.8"
         }
       },
       "System.Formats.Asn1": {
@@ -824,8 +824,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.6.0",
-        "contentHash": "MMdx5Dn+pn50kBeqdcZ5UfF6CdEMUH9BVHPUKhzhUvxIOQgnJboDiPDndYk0/x2ryohZtCme1c2ugiLUSZOfTw==",
+        "resolved": "22.6.2",
+        "contentHash": "HI16lnj+kTfPBdQ5U77PV3J2Qq3s5K7/2nH+YvIw9P0iS977ayAIvm2+/BOynf6nQ6D7PJ1IfdhKgj56MwILhw==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
@@ -881,8 +881,8 @@
           "SkiaSharp": "[3.119.0, )",
           "SkiaSharp.NativeAssets.Linux": "[3.119.0, )",
           "Swashbuckle.AspNetCore": "[9.0.3, )",
-          "System.Drawing.Common": "[9.0.7, )",
-          "Telegram.Bot": "[22.6.0, )"
+          "System.Drawing.Common": "[9.0.8, )",
+          "Telegram.Bot": "[22.6.2, )"
         }
       }
     }
