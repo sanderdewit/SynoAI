@@ -2,62 +2,117 @@ name: Build
 
 on:
   schedule:
-    - cron: '15 2 8/14 * *'  # Runs on the 8th day, repeat every 14 days at 02:15 (prevent 00:00 as capacity of Github might be reduced)
+    - cron: '15 2 8/14 * *'  # Runs on the 8th day, repeat every 14 days at 02:15
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      packages_updated: ${{ steps.check_packages.outputs.packages_updated }}  # Reference the output here
+      packages_updated: ${{ steps.check_packages.outputs.packages_updated }}
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
 
-    - name: Install dotnet-outdated
-      run: dotnet tool install --global dotnet-outdated-tool
+      - name: Install dotnet-outdated
+        run: dotnet tool install --global dotnet-outdated-tool
 
-    - name: Update NuGet Packages
-      id: check_packages  # Give this step an ID to reference its outputs
-      run: |
-        dotnet outdated --upgrade
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "Packages updated."
-          echo "PACKAGES_UPDATED=true" >> $GITHUB_ENV
-          echo "packages_updated=true" >> $GITHUB_OUTPUT  # Set environment variable
-        else
-          echo "No package updates."
-          echo "PACKAGES_UPDATED=false" >> $GITHUB_ENV
-          echo "packages_updated=false" >> $GITHUB_OUTPUT  # Set environment variable
-        fi
+      - name: Update NuGet Packages (and capture updated list)
+        id: check_packages
+        shell: bash
+        run: |
+          set -euo pipefail
 
-    - name: Commit and Push Changes
-      if: ${{ env.PACKAGES_UPDATED == 'true' }}  # Use outputs for the condition
-      run: |
-        git config --global user.name "GitHub Action"
-        git config --global user.email "action@github.com"
+          # Run "outdated" and store as JSON for parsing. Don't fail the job if outdated finds things.
+          dotnet outdated --output outdated.json --output-format json || true
+
+          # Upgrade packages
+          dotnet outdated --upgrade
+
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Packages updated."
+
+            echo "PACKAGES_UPDATED=true" >> "$GITHUB_ENV"
+            echo "packages_updated=true" >> "$GITHUB_OUTPUT"
+
+            # Build a readable list of package updates from the JSON.
+            # The JSON schema can vary slightly by tool version, so this searches for common fields.
+            UPDATED_LIST="$(jq -r '
+              .. | objects
+              | select(has("Name") and (has("ResolvedVersion") or has("CurrentVersion")) and (has("LatestVersion") or has("UpgradeVersion") or has("TargetVersion")))
+              | "\(.Name): \(.ResolvedVersion // .CurrentVersion) -> \(.LatestVersion // .UpgradeVersion // .TargetVersion)"
+            ' outdated.json | sort -u)"
+
+            # Fallback if parsing finds nothing (schema mismatch)
+            if [ -z "${UPDATED_LIST}" ]; then
+              UPDATED_LIST="(Could not parse outdated.json; check dotnet-outdated JSON schema/version.)"
+            fi
+
+            # Export for later steps
+            {
+              echo "UPDATED_PACKAGES<<EOF"
+              echo "${UPDATED_LIST}"
+              echo "EOF"
+            } >> "$GITHUB_ENV"
+
+            # Add to job summary
+            {
+              echo "## NuGet packages updated"
+              echo ""
+              echo '```'
+              echo "${UPDATED_LIST}"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "Updated packages:"
+            echo "${UPDATED_LIST}"
+          else
+            echo "No package updates."
+
+            echo "PACKAGES_UPDATED=false" >> "$GITHUB_ENV"
+            echo "packages_updated=false" >> "$GITHUB_OUTPUT"
+
+            {
+              echo "## NuGet packages updated"
+              echo ""
+              echo "No changes."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Commit and Push Changes
+        if: ${{ env.PACKAGES_UPDATED == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
           git add .
-          git commit -m "Update NuGet packages"
+          git commit -m "Update NuGet packages" -m "${UPDATED_PACKAGES}"
           git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore
+      - name: Build
+        run: dotnet build --no-restore
 
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
 
   publish:
     needs: build
@@ -65,17 +120,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Build the Docker image
-      run: docker build -t dewitauto/synoai-fork:latest SynoAI
+      - name: Build the Docker image
+        run: docker build -t dewitauto/synoai-fork:latest SynoAI
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Publish the Docker image
-      run: docker push dewitauto/synoai-fork:latest
+      - name: Publish the Docker image
+        run: docker push dewitauto/synoai-fork:latest
