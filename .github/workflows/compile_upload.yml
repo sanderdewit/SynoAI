@@ -2,7 +2,7 @@ name: Build
 
 on:
   schedule:
-    - cron: '15 2 8/14 * *'  # Runs on the 8th day, repeat every 14 days at 02:15
+    - cron: '15 2 8/14 * *'
   push:
     branches: [ main ]
   pull_request:
@@ -36,39 +36,45 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Run "outdated" and store as JSON for parsing. Don't fail the job if outdated finds things.
-          dotnet outdated --output outdated.json --output-format json || true
+          # Always create the file so jq never fails on missing file
+          : > outdated.json
 
-          # Upgrade packages
+          # Try to capture JSON to file (older versions may not support JSON; don't fail the job)
+          # NOTE: We redirect stdout to file because it's more compatible than --output <file>
+          dotnet outdated --output-format json > outdated.json 2>/dev/null || true
+
+          # Upgrade packages (this is the real action we care about)
           dotnet outdated --upgrade
 
           if [ -n "$(git status --porcelain)" ]; then
-            echo "Packages updated."
-
             echo "PACKAGES_UPDATED=true" >> "$GITHUB_ENV"
             echo "packages_updated=true" >> "$GITHUB_OUTPUT"
 
-            # Build a readable list of package updates from the JSON.
-            # The JSON schema can vary slightly by tool version, so this searches for common fields.
-            UPDATED_LIST="$(jq -r '
-              .. | objects
-              | select(has("Name") and (has("ResolvedVersion") or has("CurrentVersion")) and (has("LatestVersion") or has("UpgradeVersion") or has("TargetVersion")))
-              | "\(.Name): \(.ResolvedVersion // .CurrentVersion) -> \(.LatestVersion // .UpgradeVersion // .TargetVersion)"
-            ' outdated.json | sort -u)"
+            UPDATED_LIST=""
 
-            # Fallback if parsing finds nothing (schema mismatch)
-            if [ -z "${UPDATED_LIST}" ]; then
-              UPDATED_LIST="(Could not parse outdated.json; check dotnet-outdated JSON schema/version.)"
+            # Only attempt jq parsing if file is non-empty and jq exists
+            if [ -s outdated.json ] && command -v jq >/dev/null 2>&1; then
+              # Schema-tolerant parse: find objects that look like package entries and print Name + old->new
+              UPDATED_LIST="$(jq -r '
+                .. | objects
+                | select(has("Name"))
+                | select(has("ResolvedVersion") or has("CurrentVersion") or has("Version"))
+                | select(has("LatestVersion") or has("UpgradeVersion") or has("TargetVersion"))
+                | "\(.Name): \(.ResolvedVersion // .CurrentVersion // .Version) -> \(.LatestVersion // .UpgradeVersion // .TargetVersion)"
+              ' outdated.json | sort -u || true)"
             fi
 
-            # Export for later steps
+            # Hard fallback if JSON wasn't produced / schema mismatch
+            if [ -z "${UPDATED_LIST}" ]; then
+              UPDATED_LIST="(Packages were updated, but dotnet-outdated JSON output wasn't available/parsable on this runner.)"
+            fi
+
             {
               echo "UPDATED_PACKAGES<<EOF"
               echo "${UPDATED_LIST}"
               echo "EOF"
             } >> "$GITHUB_ENV"
 
-            # Add to job summary
             {
               echo "## NuGet packages updated"
               echo ""
@@ -80,8 +86,6 @@ jobs:
             echo "Updated packages:"
             echo "${UPDATED_LIST}"
           else
-            echo "No package updates."
-
             echo "PACKAGES_UPDATED=false" >> "$GITHUB_ENV"
             echo "packages_updated=false" >> "$GITHUB_OUTPUT"
 
@@ -97,7 +101,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
