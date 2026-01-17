@@ -1,14 +1,5 @@
 Discovering projects...
 Analyzing project(s)...
 Analyzing dependencies...
-» SynoAI
-  [net9.0]
-  Telegram.Bot  22.7.6 -> 22.8.1
-
-Version color legend:
-<red>   : Major version update or pre-release version. Possible breaking changes.
-<yellow>: Minor version update. Backwards-compatible features added.
-<green> : Patch version update. Backwards-compatible bug fixes.
-
-You can upgrade packages to the latest version by passing the -u or -u:prompt option.
-Elapsed: 00:00:07.5581803
+No outdated dependencies were detected
+Elapsed: 00:00:05.2421673
