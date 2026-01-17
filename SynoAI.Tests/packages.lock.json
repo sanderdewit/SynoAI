@@ -197,13 +197,13 @@
       },
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
         "type": "Transitive",
-        "resolved": "1.21.2",
-        "contentHash": "kN58RveGig9YjWAoYI3flDWC/jWCU0Xzzmp3f49fbnPwZLsVJu9qMt+VSrIz7I3Gn6jkeY1l7cVJopiRDOq3CQ=="
+        "resolved": "1.22.1",
+        "contentHash": "EfYANhAWqmWKoLwN6bxoiPZSOfJSO9lzX+UrU6GVhLhPub1Hd+5f0zL0/tggIA6mRz6Ebw2xCNcIsM4k+7NPng=="
       },
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "trU4LN2C04nj5qnl8HqoX0NJGPCFg9h2f5o+jjp3Xm8c8fQtu6Ga1/fNFMf3AapoHyLP1WlP21XnL2ij/TLKlg=="
+        "resolved": "10.0.2",
+        "contentHash": "1G4BdeFwc8E95MpwtR7pO4rEh2YCG/o5gqcOszdQRGrWX1ayHTZtho3xPuYZTbBxKb/3kQHjL3b4nQeNGvbM9g=="
       },
       "MimeKit": {
         "type": "Transitive",
@@ -444,10 +444,10 @@
       },
       "System.Drawing.Common": {
         "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "cmkIduwyVPfuO8kNehu3xNcjo26nMgUoJyfso9S/zTO85YovvPPG0/AFLjanx1iVgQ80OpJVnLb1jU3aIKNLdg==",
+        "resolved": "10.0.2",
+        "contentHash": "nCq8jeGD4vWaUjX3nGaDMKYqfFPposw2f4KCFnuY5Rt3NhK6zMZ/c0a52a3TZK/nnkCJfyQMwb+POKwAnZexZw==",
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "10.0.1"
+          "Microsoft.Win32.SystemEvents": "10.0.2"
         }
       },
       "System.Formats.Asn1": {
@@ -827,8 +827,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.7.6",
-        "contentHash": "3GiyPd7vSMK9s5VmuQLKotROxuP42tsKVDaRC6dgIgD/VyKKdDK5z6uPXn/nJuHTUIXKjtU6i31iPcr6LVJbHw==",
+        "resolved": "22.8.1",
+        "contentHash": "noNl83CXnTgeZRmbJv512X2CZmu+bLDGDGyDC6HH1XErvHWrfTn5KPCtqwGGXjRRSUb9LAHmXwR1GC3NrGZOJA==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
@@ -879,13 +879,13 @@
         "dependencies": {
           "MQTTnet": "[5.0.1.1416, )",
           "MailKit": "[4.14.1, )",
-          "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.21.2, )",
+          "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.22.1, )",
           "Newtonsoft.Json": "[13.0.4, )",
           "SkiaSharp": "[3.119.1, )",
           "SkiaSharp.NativeAssets.Linux": "[3.119.1, )",
           "Swashbuckle.AspNetCore": "[10.1.0, )",
-          "System.Drawing.Common": "[10.0.1, )",
-          "Telegram.Bot": "[22.7.6, )"
+          "System.Drawing.Common": "[10.0.2, )",
+          "Telegram.Bot": "[22.8.1, )"
         }
       }
     }
