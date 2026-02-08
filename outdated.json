@@ -1,5 +1,17 @@
 Discovering projects...
 Analyzing project(s)...
 Analyzing dependencies...
-No outdated dependencies were detected
-Elapsed: 00:00:05.7510570
+» SynoAI
+  [net9.0]
+  MQTTnet                       5.0.1.1416 -> 5.1.0.1559
+  SkiaSharp                     3.119.1    -> 3.119.2   
+  SkiaSharp.NativeAssets.Linux  3.119.1    -> 3.119.2   
+  Swashbuckle.AspNetCore        10.1.0     -> 10.1.2    
+
+Version color legend:
+<red>   : Major version update or pre-release version. Possible breaking changes.
+<yellow>: Minor version update. Backwards-compatible features added.
+<green> : Patch version update. Backwards-compatible bug fixes.
+
+You can upgrade packages to the latest version by passing the -u or -u:prompt option.
+Elapsed: 00:00:06.7601912
