@@ -3,14 +3,12 @@ Analyzing project(s)...
 Analyzing dependencies...
 » SynoAI
   [net9.0]
-  MailKit                 4.14.1 -> 4.15.0
-  Swashbuckle.AspNetCore  10.1.2 -> 10.1.4
-  System.Drawing.Common   10.0.2 -> 10.0.3
-  Telegram.Bot            22.8.1 -> 22.9.0
+  MailKit       4.15.0 -> 4.15.1  
+  Telegram.Bot  22.9.0 -> 22.9.5.3
 
 » SynoAI.Tests
   [net9.0]
-  coverlet.collector  6.0.4 -> 8.0.0
+  Microsoft.NET.Test.Sdk  18.0.1 -> 18.3.0
 
 Version color legend:
 <red>   : Major version update or pre-release version. Possible breaking changes.
@@ -18,4 +16,4 @@ Version color legend:
 <green> : Patch version update. Backwards-compatible bug fixes.
 
 You can upgrade packages to the latest version by passing the -u or -u:prompt option.
-Elapsed: 00:00:06.2458477
+Elapsed: 00:00:09.6987268
