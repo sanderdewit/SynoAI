@@ -4,9 +4,9 @@
     "net9.0": {
       "coverlet.collector": {
         "type": "Direct",
-        "requested": "[8.0.1, )",
-        "resolved": "8.0.1",
-        "contentHash": "heVQl5tKYnnIDYlR1QMVGueYH6iriZTcZB6AjDczQNwZzxkjDIt9C84Pt4cCiZYrbo7jkZOYGWbs6Lo9wAtVLg=="
+        "requested": "[10.0.0, )",
+        "resolved": "10.0.0",
+        "contentHash": "WFejCcOUR6k8UYyDnnR6Gk+obFYMsWrZuNqPJnsVFGVhpPSN0y20D4qbdKJnXinYGx9PQ397Hf9TnU1NBST8vA=="
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
@@ -101,10 +101,10 @@
       },
       "MailKit": {
         "type": "Transitive",
-        "resolved": "4.15.1",
-        "contentHash": "4mLbqTbH3ctd0NlukHjVQbU3ZnNDuCtB6ttNZDLPZLWMA2Dr31rh/eCSTqOwDojUX8zfDOVaxstMgJTE9PwZNA==",
+        "resolved": "4.16.0",
+        "contentHash": "trJ82DOpAmo8i1jO1vNE+dGn4mPRyeYfy4swRcAGgMJhPoI1Kohf4OFJJf0+YIj4iUxgxPn8W+ht7e7KiYzSjg==",
         "dependencies": {
-          "MimeKit": "4.15.1",
+          "MimeKit": "4.16.0",
           "System.Formats.Asn1": "8.0.1"
         }
       },
@@ -202,13 +202,13 @@
       },
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",
-        "resolved": "10.0.5",
-        "contentHash": "a7rC0Qb5JGiA4f4ooqQjsx17LgYkb9feOcMNGyBXGqYmqC4ZoLbrV98zn7Kr5Z39BIU10Bti80Jwm/QAw+45VA=="
+        "resolved": "10.0.7",
+        "contentHash": "yRy88RjP9RlFxiaxwkGSh5e7lhSRCUaSwYW323ssK85XTm13b3y65Yp8HuURXNnxGQGo9L4Bz19aQAbrfTyJqA=="
       },
       "MimeKit": {
         "type": "Transitive",
-        "resolved": "4.15.1",
-        "contentHash": "cxCcQhD0zhboFoG136jJuJtQjNRDJ+BxBm3f2vWn+53bff/CRo+K1mAkWjsW4Wuyy5O22F40MdMG2nRzQu1cJw==",
+        "resolved": "4.16.0",
+        "contentHash": "X0LFxeM4gPRIhODyY/HYS9b+zRZ7y//v59rFzgS6wLxcPuZThnMtNZHtrr0fjLyRRkg3gqJBtvW36XfUzZ7Djw==",
         "dependencies": {
           "BouncyCastle.Cryptography": "2.6.2",
           "System.Security.Cryptography.Pkcs": "8.0.1"
@@ -444,10 +444,10 @@
       },
       "System.Drawing.Common": {
         "type": "Transitive",
-        "resolved": "10.0.5",
-        "contentHash": "FYgPPbii/9Prh7RuY1gaxSyik7Ysw594K0uCHggDxHDgl7mfk8c4UlwluKjQoMquVGLce7Jld4DjjsnuYK3m7g==",
+        "resolved": "10.0.7",
+        "contentHash": "t0dLoUJOFMMyHqwpDuTKVlKVry92yUhf7qwihVT2MUrg3y/ZOHKpij5nb+jb20UT3vc7UlQWQlNmV9NQ5c7aSA==",
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "10.0.5"
+          "Microsoft.Win32.SystemEvents": "10.0.7"
         }
       },
       "System.Formats.Asn1": {
@@ -827,8 +827,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.9.6",
-        "contentHash": "VeZ79MGUMyZOESWL3ibQAAjnHgY66a7xIHhZaMqzspP0qYxO0OoguDF1xIU3cxvdj0zDHP+OGvcAkMbQD9RZdw==",
+        "resolved": "22.9.6.1",
+        "contentHash": "I0eaMaETcWIhMn4uu4RGd9e6PLJOjaOG3QAcKPsTcS80H3TF6gqj3UF9NKu4ZY90ul6Y6NiWToHkg/PsvxkotA==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
@@ -878,14 +878,14 @@
         "type": "Project",
         "dependencies": {
           "MQTTnet": "[5.1.0.1559, )",
-          "MailKit": "[4.15.1, )",
+          "MailKit": "[4.16.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.22.1, )",
           "Newtonsoft.Json": "[13.0.4, )",
           "SkiaSharp": "[3.119.2, )",
           "SkiaSharp.NativeAssets.Linux": "[3.119.2, )",
           "Swashbuckle.AspNetCore": "[10.1.7, )",
-          "System.Drawing.Common": "[10.0.5, )",
-          "Telegram.Bot": "[22.9.6, )"
+          "System.Drawing.Common": "[10.0.7, )",
+          "Telegram.Bot": "[22.9.6.1, )"
         }
       }
     }
