@@ -14,9 +14,9 @@
       },
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
         "type": "Direct",
-        "requested": "[1.22.1, )",
-        "resolved": "1.22.1",
-        "contentHash": "EfYANhAWqmWKoLwN6bxoiPZSOfJSO9lzX+UrU6GVhLhPub1Hd+5f0zL0/tggIA6mRz6Ebw2xCNcIsM4k+7NPng=="
+        "requested": "[1.23.0, )",
+        "resolved": "1.23.0",
+        "contentHash": "2wDnb4umupJZ/1ikgWozFVpggH1mlHQFc0odXVv2ZagL3RYwXgW9zmC15fiqIBzmaC0vLZUnLGwDY+p8ZR7Syw=="
       },
       "MQTTnet": {
         "type": "Direct",
@@ -69,9 +69,9 @@
       },
       "Telegram.Bot": {
         "type": "Direct",
-        "requested": "[22.9.6.1, )",
-        "resolved": "22.9.6.1",
-        "contentHash": "I0eaMaETcWIhMn4uu4RGd9e6PLJOjaOG3QAcKPsTcS80H3TF6gqj3UF9NKu4ZY90ul6Y6NiWToHkg/PsvxkotA==",
+        "requested": "[22.9.6.2, )",
+        "resolved": "22.9.6.2",
+        "contentHash": "ZRtW/Z/CZscGp+HvxaewpWLZDNg9Cc8R+niMuh7HlXLAio2kvatbSNQLYySCYffcS4eP8UBAdwepaXiKzHEcLQ==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
