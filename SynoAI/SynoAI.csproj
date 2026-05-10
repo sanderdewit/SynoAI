@@ -10,7 +10,7 @@
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-		<AnalysisLevel>latest-minimum</AnalysisLevel>
+		<AnalysisLevel>9-minimum</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
