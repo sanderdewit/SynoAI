@@ -26,7 +26,7 @@ namespace SynoAI.Services
             // Draw the exclusion zones if enabled
             if (Config.DrawExclusions && camera.Exclusions != null)
             {
-                logger.LogInformation("{camera.Name}: Drawing exclusion zones.",
+                logger.LogInformation("{CameraName}: Drawing exclusion zones.",
                     camera.Name);
 
                 using SKCanvas canvas = new(image);
@@ -46,13 +46,13 @@ namespace SynoAI.Services
             // Don't process the drawing if the drawing mode is off
             if (Config.DrawMode == DrawMode.Off)
             {
-                logger.LogInformation("{camera.Name}: Draw mode is Off. Skipping image boundaries.",
+                logger.LogInformation("{CameraName}: Draw mode is Off. Skipping image boundaries.",
                     camera.Name);
             }
             else
             {
                 // Draw the predictions
-                logger.LogInformation("{camera.Name}: Dressing image with boundaries.",
+                logger.LogInformation("{CameraName}: Dressing image with boundaries.",
                     camera.Name);
                 using SKCanvas canvas = new(image);
                 int counter = 1; //used for assigning a reference number on each prediction if AlternativeLabelling is true
@@ -142,7 +142,7 @@ namespace SynoAI.Services
             }
 
             stopwatch.Stop();
-            logger.LogInformation("{camera.Name}: Finished dressing image boundaries ({stopwatchElapsedMilliseconds}ms).",
+            logger.LogInformation("{CameraName}: Finished dressing image boundaries ({ElapsedMs}ms).",
                 camera.Name,
                 stopwatch.ElapsedMilliseconds);
 
@@ -181,8 +181,8 @@ namespace SynoAI.Services
 
             if (!Directory.Exists(directory))
             {
-                logger.LogInformation("{camera}: Creating directory '{directory}'.",
-                    camera,
+                logger.LogInformation("{CameraName}: Creating directory '{Directory}'.",
+                    camera.Name,
                     directory);
                 Directory.CreateDirectory(directory);
             }
@@ -213,8 +213,8 @@ namespace SynoAI.Services
             }
 
             string filePath = Path.Combine(directory, fileName);
-            logger.LogInformation("{camera}: Saving image to '{filePath}'.",
-                camera,
+            logger.LogInformation("{CameraName}: Saving image to '{FilePath}'.",
+                camera.Name,
                 filePath);
 
             using (FileStream saveStream = new(filePath, FileMode.CreateNew))
@@ -224,15 +224,15 @@ namespace SynoAI.Services
 
                 if (saved)
                 {
-                    logger.LogInformation("{camera}: Image saved to '{filePath}' ({stopwatchElapsedMilliseconds}ms).",
-                        camera,
+                    logger.LogInformation("{CameraName}: Image saved to '{FilePath}' ({ElapsedMs}ms).",
+                        camera.Name,
                         filePath,
                         stopwatch.ElapsedMilliseconds);
                 }
                 else
                 {
-                    logger.LogInformation("{camera}: Failed to save image to '{filePath}' ({stopwatchElapsedMilliseconds}ms).",
-                        camera,
+                    logger.LogInformation("{CameraName}: Failed to save image to '{FilePath}' ({ElapsedMs}ms).",
+                        camera.Name,
                         filePath,
                         stopwatch.ElapsedMilliseconds);
                 }

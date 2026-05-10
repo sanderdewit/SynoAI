@@ -42,12 +42,12 @@ namespace SynoAI.Notifiers.Pushover
         {
             if (string.IsNullOrWhiteSpace(ApiKey))
             {
-                logger.LogError($"{nameof(ApiKey)} must be specified.");
+                logger.LogError("{Property} must be specified.", nameof(ApiKey));
                 return;
             }
             else if (string.IsNullOrWhiteSpace(UserKey))
             {
-                logger.LogError($"{nameof(UserKey)} must be specified.");
+                logger.LogError("{Property} must be specified.", nameof(UserKey));
                 return;
             }
 

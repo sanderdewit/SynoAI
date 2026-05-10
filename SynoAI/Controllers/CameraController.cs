@@ -214,8 +214,9 @@ namespace SynoAI.Controllers
 
                 if (exclude)
                 {
+                    string modeStr = exclusion.Mode.ToString();
                     _logger.LogDebug("{Id}: Ignored '{Label}' as it fell within an exclusion zone (mode '{Mode}') at {Ms}ms.",
-                        id, prediction.Label, exclusion.Mode, overallStopwatch.ElapsedMilliseconds);
+                        id, prediction.Label, modeStr, overallStopwatch.ElapsedMilliseconds);
                     return false;
                 }
             }
@@ -316,14 +317,14 @@ namespace SynoAI.Controllers
             IEnumerable<AIPrediction>? predictions = await _aiService.ProcessAsync(camera, imageBytes);
             if (predictions == null)
             {
-                _logger.LogError("{Camera}: Failed to get predictions.", camera);
+                _logger.LogError("{CameraName}: Failed to get predictions.", camera.Name);
                 return null;
             }
 
             foreach (AIPrediction prediction in predictions)
             {
                 _logger.LogInformation("AI Detected '{Camera}': {Label} ({Confidence}%) [Size: {SizeX}x{SizeY}] [Start: {MinX},{MinY} | End: {MaxX},{MaxY}]",
-                    camera, prediction.Label, prediction.Confidence,
+                    camera.Name, prediction.Label, prediction.Confidence,
                     prediction.SizeX, prediction.SizeY,
                     prediction.MinX, prediction.MinY, prediction.MaxX, prediction.MaxY);
             }

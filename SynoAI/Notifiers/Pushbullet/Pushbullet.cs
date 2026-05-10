@@ -89,23 +89,25 @@ namespace SynoAI.Notifiers.Pushbullet
                 HttpResponseMessage pushResponse = await Shared.HttpClient.PostAsync(new Uri(URI_PUSHES), push);
                 if (pushResponse.IsSuccessStatusCode)
                 {
-                    logger.LogInformation("{camera.Name}: Pushbullet notification sent successfully",
+                    logger.LogInformation("{CameraName}: Pushbullet notification sent successfully",
                         camera.Name);
                 }
                 else
                 {
                     PushbulletErrorResponse error = await GetResponse<PushbulletErrorResponse>(pushResponse);
-                    logger.LogError("{camera.Name}: Pushbullet error sending push ({error.Error})",
+                    string pushErrorStr = error.Error?.ToString() ?? string.Empty;
+                    logger.LogError("{CameraName}: Pushbullet error sending push ({PushError})",
                         camera.Name,
-                        error.Error);
+                        pushErrorStr);
                 }
             }
             else
             {
                 PushbulletErrorResponse error = await GetResponse<PushbulletErrorResponse>(requestResponse);
-                logger.LogError("{cameraName}: Pushbullet error requesting upload ({errorError})",
+                string uploadErrorStr = error.Error?.ToString() ?? string.Empty;
+                logger.LogError("{CameraName}: Pushbullet error requesting upload ({UploadError})",
                     camera.Name,
-                    error.Error);
+                    uploadErrorStr);
             }
         }
 
