@@ -18,7 +18,7 @@ namespace SynoAI.Notifiers.Pushbullet
         /// <summary>
         /// The API Key for sending the notification.
         /// </summary>
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; set; }
 
         /// <summary>
         /// Sends a message and an image using the Pushbullet API.
@@ -58,9 +58,9 @@ namespace SynoAI.Notifiers.Pushbullet
 
                 AddHeaders(upload);
 
-                HttpResponseMessage uploadFileResponse = await Shared.HttpClient.PostAsync(uploadRequestResult.UploadUrl, upload);
+                HttpResponseMessage uploadFileResponse = await Shared.HttpClient.PostAsync(uploadRequestResult.UploadUrl!, upload);
 
-                string uploadError = null;
+                string? uploadError = null;
                 bool uploadSuccess = uploadFileResponse.IsSuccessStatusCode;
                 if (!uploadFileResponse.IsSuccessStatusCode)
                 {

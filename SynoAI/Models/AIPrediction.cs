@@ -8,7 +8,7 @@
         /// <summary>
         /// Gets or sets the label of the prediction.
         /// </summary>
-        public string Label { get; set; }
+        public string Label { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the confidence of the prediction.
         /// </summary>

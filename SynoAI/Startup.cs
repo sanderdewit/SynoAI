@@ -1,6 +1,7 @@
 using Microsoft.OpenApi;
 using SynoAI.Hubs;
 using SynoAI.Services;
+using SynoAI.Settings;
 
 namespace SynoAI
 {
@@ -17,6 +18,13 @@ namespace SynoAI
             services.AddScoped<IAIService, AIService>();
             services.AddScoped<ISynologyService, SynologyService>();
 
+            // #15: Replace blocking lifetime callbacks with proper hosted services
+            services.AddHostedService<SynoAIStartupService>();
+            services.AddHostedService<CaptureCleanupService>();
+
+            // #38/#3: Register IHttpClientFactory so SynologyService can avoid socket exhaustion
+            services.AddHttpClient();
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -32,8 +40,12 @@ namespace SynoAI
         /// <summary>
         /// Configures the application.
         /// </summary>
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration, IHostApplicationLifetime lifetime, ILogger<Startup> logger, ISynologyService synologyService)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration, ILogger<Startup> logger)
         {
+            // Config.Generate() MUST be called here (before hosted services start) because static
+            // helpers (SnapshotManager, NotifierBase, Camera) and the hosted services all read
+            // from Config.*. The IOptions<AppSettings> registration makes settings available via
+            // DI for future migration away from the static Config class (#5).
             Config.Generate(logger, configuration);
 
             if (env.IsDevelopment())
@@ -59,22 +71,8 @@ namespace SynoAI
                 endpoints.MapControllers();
             });
 
-            lifetime.ApplicationStarted.Register(() =>
-            {
-                List<Task> initializationTasks = new()
-                {
-                    synologyService.InitialiseAsync()
-                };
-                initializationTasks.AddRange(Config.Notifiers.Select(n => n.InitializeAsync(logger)));
-                Task.WhenAll(initializationTasks).Wait();
-            });
-
-            lifetime.ApplicationStopping.Register(() =>
-            {
-                List<Task> cleanupTasks = new();
-                cleanupTasks.AddRange(Config.Notifiers.Select(n => n.CleanupAsync(logger)));
-                Task.WhenAll(cleanupTasks).Wait();
-            });
+            // NOTE: The ApplicationStarted / ApplicationStopping lifetime callbacks have been
+            // replaced by SynoAIStartupService and CaptureCleanupService (fixes #15 / #28).
         }
     }
 }

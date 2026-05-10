@@ -8,11 +8,11 @@ namespace SynoAI.Models
         /// <summary>
         /// Gets or sets the start for the exclusion zone.
         /// </summary>
-        public Point Start { get; set; }
+        public Point Start { get; set; } = new();
         /// <summary>
         /// Gets or sets the end for the exclusion zone.
         /// </summary>
-        public Point End { get; set; }
+        public Point End { get; set; } = new();
         /// <summary>
         /// Gets or sets the overlap mode for the exclusion zone.
         /// </summary>

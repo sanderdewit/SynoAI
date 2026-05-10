@@ -5,9 +5,9 @@ namespace SynoAI.Notifiers.SynologyChat
     internal class SynologyChatErrorReasonResponse
     {
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
         [JsonProperty("reason")]
-        public string Reason { get; set; }
+        public string? Reason { get; set; }
 
         public override string ToString()
         {

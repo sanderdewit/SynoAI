@@ -1,4 +1,4 @@
-﻿using SynoAI.Models;
+using SynoAI.Models;
 using System.Net;
 
 namespace SynoAI.Services
@@ -15,14 +15,14 @@ namespace SynoAI.Services
         /// <summary>
         /// Logon to the service
         /// </summary>
-        Task<Cookie> LoginAsync();
+        Task<Cookie?> LoginAsync();
         /// <summary>
         /// Get the cameras available in Synology
         /// </summary>
-        Task<IEnumerable<SynologyCamera>> GetCamerasAsync();
+        Task<IEnumerable<SynologyCamera>?> GetCamerasAsync();
         /// <summary>
         /// taking the snapshot
         /// </summary>
-        Task<byte[]> TakeSnapshotAsync(string cameraName);
+        Task<byte[]?> TakeSnapshotAsync(string cameraName);
     }
 }

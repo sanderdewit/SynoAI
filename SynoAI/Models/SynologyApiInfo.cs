@@ -16,10 +16,10 @@ namespace SynoAI.Models
         /// <summary>
         /// Gets or sets the path of the API
         /// </summary>
-        public string Path { get; set; }
+        public string Path { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the requested format of the api
         /// </summary>
-        public string RequestFormat { get; set; }
+        public string? RequestFormat { get; set; }
     }
 }
