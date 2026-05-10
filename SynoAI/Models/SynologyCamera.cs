@@ -15,12 +15,12 @@ namespace SynoAI.Models
         /// Gets or sets the Name.
         /// </summary>
         [JsonProperty("Name")]
-        public string NameOld { get; set; }
+        public string NameOld { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the NameOld.
         /// </summary>
         [JsonProperty("newName")]
-        public string NameNew { get; set; }
+        public string NameNew { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the NameNew.
         /// </summary>

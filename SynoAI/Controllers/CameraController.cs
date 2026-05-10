@@ -132,8 +132,8 @@ namespace SynoAI.Controllers
                     }
 
                     if (Config.SaveOriginalSnapshot == SaveSnapshotMode.Always ||
-                        (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithPredictions && predictions.Any()) ||
-                        (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithValidPredictions && validPredictions.Any()))
+                        (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithPredictions && predictions.Count > 0) ||
+                        (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithValidPredictions && validPredictions.Count > 0))
                     {
                         _logger.LogInformation("{Id}: Saving original image", id);
                         SnapshotManager.SaveOriginalImage(_logger, camera, processedBytes);
@@ -159,7 +159,7 @@ namespace SynoAI.Controllers
                         return Ok();
                     }
 
-                    if (predictions.Any())
+                    if (predictions.Count > 0)
                         _logger.LogInformation("{Id}: No valid objects at {Ms}ms.", id, overallStopwatch.ElapsedMilliseconds);
                     else
                         _logger.LogInformation("{Id}: Nothing detected by the AI at {Ms}ms.", id, overallStopwatch.ElapsedMilliseconds);
@@ -196,7 +196,7 @@ namespace SynoAI.Controllers
 
         private bool ShouldIncludePrediction(string id, Camera camera, Stopwatch overallStopwatch, AIPrediction prediction)
         {
-            if (camera.Exclusions == null || !camera.Exclusions.Any())
+            if (camera.Exclusions == null || camera.Exclusions.Count == 0)
                 return true;
 
             Rectangle boundary = new(prediction.MinX, prediction.MinY, prediction.SizeX, prediction.SizeY);
@@ -245,13 +245,13 @@ namespace SynoAI.Controllers
                 return (snapshot, null);
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            SKBitmap bitmap = SKBitmap.Decode(snapshot);
+            SKBitmap bitmap = SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException($"{camera.Name}: Failed to decode snapshot for rotation.");
 
             _logger.LogInformation("{CameraName}: Rotating image {Degrees} degrees.", camera.Name, camera.Rotate);
             bitmap = Rotate(bitmap, camera.Rotate);
 
-            using SKPixmap pixmap = bitmap.PeekPixels();
-            using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, 100);
+            using SKPixmap pixmap = bitmap.PeekPixels() ?? throw new InvalidOperationException($"{camera.Name}: Failed to get pixel data from rotated bitmap.");
+            using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, 100) ?? throw new InvalidOperationException($"{camera.Name}: Failed to encode rotated image.");
             _logger.LogInformation("{CameraName}: Image preprocessing complete ({Ms}ms).", camera.Name, stopwatch.ElapsedMilliseconds);
 
             return (data.ToArray(), bitmap);

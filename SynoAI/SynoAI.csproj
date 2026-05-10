@@ -16,13 +16,13 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-		<WarningsNotAsErrors>CS1591;CS1573;CA1416;CA2254;CA1859;CA1860;CA1866;CA2022;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8625;CS8629;CS8631;CS8633;CS8634</WarningsNotAsErrors>
+		<WarningsNotAsErrors>CS1591;CA1416;CA2254</WarningsNotAsErrors>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-		<WarningsNotAsErrors>CS1591;CS1573;CA1416;CA2254;CA1859;CA1860;CA1866;CA2022;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8625;CS8629;CS8631;CS8633;CS8634</WarningsNotAsErrors>
+		<WarningsNotAsErrors>CS1591;CA1416;CA2254</WarningsNotAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>

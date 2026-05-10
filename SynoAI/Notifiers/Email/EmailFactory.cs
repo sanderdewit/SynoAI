@@ -11,12 +11,12 @@ namespace SynoAI.Notifiers.Email
                 logger.LogInformation("Processing Email Config");
 
                 SecureSocketOptions socketOptions = GetSecureSocketOptions(logger, section);
-                string sender = section.GetValue<string>("Sender");
-                string destination = section.GetValue<string>("Destination");
-                string host = section.GetValue<string>("Host");
+                string sender = section.GetValue<string>("Sender") ?? string.Empty;
+                string destination = section.GetValue<string>("Destination") ?? string.Empty;
+                string host = section.GetValue<string>("Host") ?? string.Empty;
                 int port = section.GetValue<int>("Port", 25);
-                string username = section.GetValue<string>("Username");
-                string password = section.GetValue<string>("Password");
+                string username = section.GetValue<string>("Username") ?? string.Empty;
+                string password = section.GetValue<string>("Password") ?? string.Empty;
 
                 return new Email()
                 {
@@ -33,7 +33,7 @@ namespace SynoAI.Notifiers.Email
 
         private static SecureSocketOptions GetSecureSocketOptions(ILogger logger, IConfigurationSection section)
         {
-            string options = section.GetValue<string>("Encryption", "None").ToUpper();
+            string options = (section.GetValue<string>("Encryption", "None") ?? "None").ToUpper();
 
             if (string.IsNullOrWhiteSpace(options) || options.Equals("None", StringComparison.OrdinalIgnoreCase))
             {

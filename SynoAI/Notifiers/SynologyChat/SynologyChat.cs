@@ -11,7 +11,7 @@ namespace SynoAI.Notifiers.SynologyChat
         /// <summary>
         /// The URL to send the request to including the token.
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
 
         /// <summary>
         /// Sends a notification to the Webhook.
@@ -52,7 +52,7 @@ namespace SynoAI.Notifiers.SynologyChat
             {
                 // Check that it's actually successful, because Synology like to make things awkward
                 string responseString = await response.Content.ReadAsStringAsync();
-                SynologyChatResponse actualResponse = JsonConvert.DeserializeObject<SynologyChatResponse>(responseString);
+                SynologyChatResponse actualResponse = JsonConvert.DeserializeObject<SynologyChatResponse>(responseString)!;
                 if (actualResponse.Success)
                 {
                     logger.LogInformation("{cameraName}: SynologyChat: Success.",
@@ -62,8 +62,8 @@ namespace SynoAI.Notifiers.SynologyChat
                 {
                     logger.LogInformation("{cameraName}: SynologyChat: Failed with error '{actualResponseErrorCode}': {actualResponseErrorErrors}.",
                         camera.Name,
-                        actualResponse.Error.Code,
-                        actualResponse.Error.Errors);
+                        actualResponse.Error?.Code,
+                        actualResponse.Error?.Errors);
                 }
             }
             else

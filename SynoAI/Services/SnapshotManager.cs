@@ -15,12 +15,13 @@ namespace SynoAI.Services
         /// <param name="predictions">The list of predictions with the right size (but may or may not be the types configured as interest for this camera).</param>
         /// <param name="validPredictions">The list of predictions with the right size and matching the type of objects of interest for this camera.</param>
         /// <param name="logger"></param>
+        /// <param name="preloadedBitmap">Optional pre-decoded bitmap from rotation, to avoid a redundant decode.</param>
         public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger, SKBitmap? preloadedBitmap = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             // Reuse the bitmap from rotation if provided, avoiding a redundant decode.
-            SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot);
+            SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException("Failed to decode snapshot.");
 
             // Draw the exclusion zones if enabled
             if (Config.DrawExclusions && camera.Exclusions != null)
@@ -159,7 +160,7 @@ namespace SynoAI.Services
         /// <param name="snapshot">The image to save.</param>
         public static string SaveOriginalImage(ILogger logger, Camera camera, byte[] snapshot)
         {
-            SKBitmap image = SKBitmap.Decode(new MemoryStream(snapshot));
+            SKBitmap image = SKBitmap.Decode(new MemoryStream(snapshot)) ?? throw new InvalidOperationException("Failed to decode original snapshot.");
             return SaveImage(logger, camera, image, "Original");
         }
 
@@ -171,7 +172,7 @@ namespace SynoAI.Services
         /// <param name="camera">The camera to save the image for.</param>
         /// <param name="image">The image to save.</param>
         /// <param name="suffix"></param>
-        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string suffix = null)
+        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string? suffix = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 

@@ -13,13 +13,13 @@ namespace SynoAI.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<AIPrediction>> ProcessAsync(Camera camera, byte[] image)
+        public async Task<IEnumerable<AIPrediction>?> ProcessAsync(Camera camera, byte[] image)
         {
-            AI ai = GetAI();
+            AIProcessorAI ai = GetAI();
             return await ai.Process(_logger, camera, image);
         }
 
-        private static AI GetAI()
+        private static AIProcessorAI GetAI()
         {
             return Config.AI switch
             {

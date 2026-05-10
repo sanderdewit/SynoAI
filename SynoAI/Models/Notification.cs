@@ -7,11 +7,11 @@ namespace SynoAI.Models
         /// <summary>
         /// Object for fetching the processed image
         /// </summary>
-        public ProcessedImage ProcessedImage { get; set; }
+        public required ProcessedImage ProcessedImage { get; set; }
         /// <summary>
         /// The list of valid predictions.
         /// </summary>
-        public IEnumerable<AIPrediction> ValidPredictions { get; set; }
+        public required IEnumerable<AIPrediction> ValidPredictions { get; set; }
 
         /// <summary>
         /// The list of types that were found.
@@ -28,7 +28,7 @@ namespace SynoAI.Models
         /// Gets the labels from the predictions to use in the notifications.
         /// </summary>
         /// <returns>A list of labels.</returns>
-        private IEnumerable<string> GetLabels()
+        private List<string> GetLabels()
         {
             if (Config.AlternativeLabelling && Config.DrawMode == DrawMode.Matches)
             {

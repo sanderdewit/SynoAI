@@ -20,6 +20,6 @@ namespace SynoAI.AIs
         /// <param name="camera">The camera from which the image was captured.</param>
         /// <param name="image">The image to be processed.</param>
         /// <returns>A list of predictions made by the AI.</returns>
-        public abstract Task<IEnumerable<AIPrediction>> Process(ILogger logger, Camera camera, byte[] image);
+        public abstract Task<IEnumerable<AIPrediction>?> Process(ILogger logger, Camera camera, byte[] image);
     }
 }

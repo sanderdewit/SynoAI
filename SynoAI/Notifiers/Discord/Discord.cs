@@ -8,7 +8,7 @@ namespace SynoAI.Notifiers.Discord
         /// <summary>
         /// Discord Webhook Url.
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
 
         public override async Task SendAsync(Camera camera, Notification notification, ILogger logger)
         {
