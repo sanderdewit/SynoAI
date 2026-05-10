@@ -827,8 +827,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.9.6.2",
-        "contentHash": "ZRtW/Z/CZscGp+HvxaewpWLZDNg9Cc8R+niMuh7HlXLAio2kvatbSNQLYySCYffcS4eP8UBAdwepaXiKzHEcLQ==",
+        "resolved": "22.10.0",
+        "contentHash": "gZLR0ZBLp4sw1Y//SiXwZERd7zrQT80ip6+hmvHnCci9GuKk5znnHwqA1aR/3rCNAVP0BGDEltBbbXb9li6g0w==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
@@ -885,7 +885,7 @@
           "SkiaSharp.NativeAssets.Linux": "[3.119.2, )",
           "Swashbuckle.AspNetCore": "[10.1.7, )",
           "System.Drawing.Common": "[10.0.7, )",
-          "Telegram.Bot": "[22.9.6.2, )"
+          "Telegram.Bot": "[22.10.0, )"
         }
       }
     }
