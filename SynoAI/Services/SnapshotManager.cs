@@ -15,12 +15,12 @@ namespace SynoAI.Services
         /// <param name="predictions">The list of predictions with the right size (but may or may not be the types configured as interest for this camera).</param>
         /// <param name="validPredictions">The list of predictions with the right size and matching the type of objects of interest for this camera.</param>
         /// <param name="logger"></param>
-        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger)
+        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger, SKBitmap? preloadedBitmap = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            // Load the bitmap 
-            SKBitmap image = SKBitmap.Decode(snapshot);
+            // Reuse the bitmap from rotation if provided, avoiding a redundant decode.
+            SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot);
 
             // Draw the exclusion zones if enabled
             if (Config.DrawExclusions && camera.Exclusions != null)
