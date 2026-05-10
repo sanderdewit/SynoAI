@@ -6,7 +6,7 @@
     graphDraw.GraphXAxisHeight = 24;
     graphDraw.GraphYAxisWidth = 24;
     graphDraw.GraphYSteps = 5;
-    string camera = ViewData["camera"]?.ToString() ?? string.Empty;
+    string camera = ViewData["camera"].ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -28,8 +28,8 @@
         <h4>Data for camera @camera <a href="/@camera/RT">(View in realtime)</a> on date @ViewData["year"]-@ViewData["month"]-@ViewData["day"] @@ @ViewData["hour"] Hs. presented on @DateTime.Now</h4>
         <hr>
         @{ 
-            DateTime fecha = new DateTime(Int16.Parse(ViewData["year"]?.ToString() ?? "0"),Int16.Parse(ViewData["month"]?.ToString() ?? "0"),Int16.Parse(ViewData["day"]?.ToString() ?? "0"),Int16.Parse(ViewData["hour"]?.ToString() ?? "0"),59,59);
-            GraphData data = SynoAI.Controllers.HomeController.GetData(ViewData["camera"]?.ToString() ?? string.Empty, fecha, true);
+            DateTime fecha = new DateTime(Int16.Parse(ViewData["year"].ToString()),Int16.Parse(ViewData["month"].ToString()),Int16.Parse(ViewData["day"].ToString()),Int16.Parse(ViewData["hour"].ToString()),59,59);
+            GraphData data = SynoAI.Controllers.HomeController.GetData(ViewData["camera"].ToString(), fecha, true); 
         }
             <p>
                 Found <b>@data.Snapshots.ToString()</b> snapshots over <b>@data.MinutesCounter.ToString()</b> minutes of activity, using <b>@SynoAI.Controllers.HomeController.NiceByteSize(data.Storage)</b> of storage space:

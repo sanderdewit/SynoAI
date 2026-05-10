@@ -11,7 +11,7 @@ namespace SynoAI.Notifiers.Mqtt
         /// <summary>
         /// The username when using Basic authentication.
         /// </summary>
-        public string? Host { get; set; }
+        public string Host { get; set; }
         /// <summary>
         /// The username when using Basic authentication.
         /// </summary>
@@ -19,22 +19,22 @@ namespace SynoAI.Notifiers.Mqtt
         /// <summary>
         /// The username when using Basic authentication.
         /// </summary>
-        public string? Username { get; set; }
+        public string Username { get; set; }
         /// <summary>
         /// The password to use when using Basic authentication.
         /// </summary>
-        public string? Password { get; set; }
+        public string Password { get; set; }
         /// <summary>
         /// Notifications will be sent to "{BaseTopic}/{CameraName}/notification".
         /// </summary>
-        public string? BaseTopic { get; set; }
+        public string BaseTopic { get; set; }
         /// <summary>
         /// Whether the image should be sent as part of the message payload.
         /// </summary>
         public bool SendImage { get; set; }
 
         private const double _connectionTimeoutSeconds = 10.0;
-        private readonly IMqttClient _client;
+        private IMqttClient _client;
 
         public Mqtt() : base()
         {

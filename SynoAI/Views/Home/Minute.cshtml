@@ -1,6 +1,6 @@
 @{
-    DateTime date = ViewData["date"] is DateTime d ? d : DateTime.MinValue;
-    string camera = ViewData["camera"]?.ToString() ?? string.Empty;
+    DateTime date = (DateTime)ViewData["date"];
+    string camera = ViewData["camera"].ToString();
 }
 
 <!DOCTYPE html>
@@ -16,7 +16,7 @@
         <h4>Snapshots for camera <a href="/@camera/RT">(View in realtime)</a> on date @date.ToString(@"yyyy-MM-dd") @@ @date.ToString(@"HH\:mm") Hs. presented on @DateTime.Now</h4>
         <hr>
         @{
-            List<String> snapshots = SynoAI.Controllers.HomeController.GetSnapshots(ViewData["camera"]?.ToString() ?? string.Empty, date);
+            List<String> snapshots = SynoAI.Controllers.HomeController.GetSnapshots(ViewData["camera"].ToString(), date);
 
             //Depending on snapshots quantity, the size I will call the image
             int snapWidth = 640;

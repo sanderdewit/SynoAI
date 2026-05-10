@@ -15,7 +15,7 @@ namespace SynoAI.AIs.AIProcessor
         /// <summary>
         /// Gets or sets the label associated with the prediction.
         /// </summary>
-        public string Label { get; set; } = string.Empty;
+        public string Label { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum X-coordinate of the bounding box for the prediction.

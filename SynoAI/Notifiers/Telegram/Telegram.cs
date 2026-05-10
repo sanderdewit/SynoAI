@@ -12,15 +12,15 @@ namespace SynoAI.Notifiers.Telegram
         /// <summary>
         /// The ID of the chat to send notifications to
         /// </summary>
-        public string? ChatID { get; set; }
+        public string ChatID { get; set; }
         /// <summary>
         /// The token used to authenticate to Telegram
         /// </summary>
-        public string? Token { get; set; }
+        public string Token { get; set; }
         /// <summary>
         /// Photo base URL
         /// </summary>
-        public string? PhotoBaseURL { get; set; }
+        public string PhotoBaseURL { get; set; }
 
         /// <summary>
         /// Sends a message and an image using the Telegram API.
@@ -39,7 +39,7 @@ namespace SynoAI.Notifiers.Telegram
 
                 try
                 {
-                    TelegramBotClient bot = new(Token!);
+                    TelegramBotClient bot = new(Token);
 
                     //string message = GetMessage(camera, foundTypes);
                     string message = GetMessage(camera, notification.FoundTypes, notification.ValidPredictions.ToList());
@@ -49,7 +49,7 @@ namespace SynoAI.Notifiers.Telegram
                         // The photo base URL hasn't been specified, which means we need to send the file ourselves
                         using FileStream fileStream = processedImage.GetReadonlyStream();
                         var inputFile = new InputFileStream(fileStream, processedImage.FileName);
-                        await bot.SendPhoto(chatId: ChatID!, photo: inputFile, caption: message);
+                        await bot.SendPhoto(chatId: ChatID, photo: inputFile, caption: message);
                         // TODO - Add a config to disable the sending of the image?
                     }
                     else
@@ -58,7 +58,7 @@ namespace SynoAI.Notifiers.Telegram
                         //api requires a download of the file
                         using HttpClient httpClient = new();
                         using Stream photoStream = await httpClient.GetStreamAsync(photoUrl);
-                        await bot.SendPhoto(chatId: ChatID!, photo: new InputFileStream(photoStream, processedImage.FileName), caption: message);
+                        await bot.SendPhoto(chatId: ChatID, photo: new InputFileStream(photoStream, processedImage.FileName), caption: message);
                     }
 
                     logger.LogInformation("{cameraName}: Telegram notification sent successfully", cameraName);

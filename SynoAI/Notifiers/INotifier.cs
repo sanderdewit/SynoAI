@@ -7,11 +7,11 @@ namespace SynoAI.Notifiers
         /// <summary>
         /// The list of camera names that the notifier is for.
         /// </summary>
-        IEnumerable<string>? Cameras { get; set; }
+        IEnumerable<string> Cameras { get; set; }
         /// <summary>
         /// The list of types that the notifier is for.
         /// </summary>
-        IEnumerable<string>? Types { get; set; }
+        IEnumerable<string> Types { get; set; }
         /// <summary>
         /// Handles any initialization for the notifier (e.g. establishing a long-lived connection).
         /// </summary>

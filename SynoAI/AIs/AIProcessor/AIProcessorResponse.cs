@@ -12,6 +12,6 @@
         /// <summary>
         /// Gets or sets the collection of predictions made by DeepStack AI.
         /// </summary>
-        public IEnumerable<AIProcessorPrediction> Predictions { get; set; } = Enumerable.Empty<AIProcessorPrediction>();
+        public IEnumerable<AIProcessorPrediction> Predictions { get; set; }
     }
 }

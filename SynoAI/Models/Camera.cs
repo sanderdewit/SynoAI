@@ -8,11 +8,11 @@
         /// <summary>
         /// The name of the camera.
         /// </summary>
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; }
         /// <summary>
         /// The list of types that this camera is looking for.
         /// </summary>
-        public IEnumerable<string>? Types { get; set; }
+        public IEnumerable<string> Types { get; set; }
         /// <summary>
         /// The Threshold to apply to the target types.
         /// </summary>
@@ -57,7 +57,7 @@
         /// <summary>
         /// The zones to exclude when checking for objects of interest.
         /// </summary>
-        public List<Zone>? Exclusions { get; set; }
+        public List<Zone> Exclusions { get; set; }
 
         /// <summary>
         /// Gets the minimum size the object must be horizontally to be considered as a valid result from either the current camera, or the main config default if not specified.

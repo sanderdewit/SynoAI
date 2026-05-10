@@ -15,17 +15,12 @@ namespace SynoAI.Services
         /// <param name="predictions">The list of predictions with the right size (but may or may not be the types configured as interest for this camera).</param>
         /// <param name="validPredictions">The list of predictions with the right size and matching the type of objects of interest for this camera.</param>
         /// <param name="logger"></param>
-        /// <param name="preloadedBitmap">
-        /// An already-decoded <see cref="SKBitmap"/> produced by the pre-processing step
-        /// (e.g. rotation). When provided, the redundant decode of <paramref name="snapshot"/>
-        /// is skipped (fixes #19 — triple JPEG encode/decode on rotation).
-        /// </param>
-        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger, SKBitmap? preloadedBitmap = null)
+        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            // Use the pre-decoded bitmap when available to avoid an extra decode (#19)
-            SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot);
+            // Load the bitmap 
+            SKBitmap image = SKBitmap.Decode(snapshot);
 
             // Draw the exclusion zones if enabled
             if (Config.DrawExclusions && camera.Exclusions != null)
@@ -176,7 +171,7 @@ namespace SynoAI.Services
         /// <param name="camera">The camera to save the image for.</param>
         /// <param name="image">The image to save.</param>
         /// <param name="suffix"></param>
-        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string? suffix = null)
+        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string suffix = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 

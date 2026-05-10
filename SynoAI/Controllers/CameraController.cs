@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using SkiaSharp;
 using SynoAI.Hubs;
@@ -53,11 +53,11 @@ namespace SynoAI.Controllers
         /// <param name="id">The name of the camera.</param>
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> Get(string id)
+        public async void Get(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
-                return BadRequest("Camera ID must not be empty.");
+                throw new ArgumentNullException(nameof(id));
             }
 
             if (_enabledCameras.TryGetValue(id, out bool enabled))
@@ -67,17 +67,17 @@ namespace SynoAI.Controllers
                     // The camera has been disabled, so don't process any requests
                     _logger.LogInformation("{id}: Requests for this camera will not be processed as it is currently disabled.",
                         id);
-                    return Ok();
+                    return;
                 }
             }
 
             // Fetch the camera
-            Camera? camera = Config.Cameras.FirstOrDefault(x => x.Name.Equals(id, StringComparison.OrdinalIgnoreCase));
+            Camera camera = Config.Cameras.FirstOrDefault(x => x.Name.Equals(id, StringComparison.OrdinalIgnoreCase));
             if (camera == null)
             {
                 _logger.LogError("{id}: The camera was not found.",
                     id);
-                return NotFound($"Camera '{id}' was not found in the configuration.");
+                return;
             }
 
 
@@ -90,7 +90,7 @@ namespace SynoAI.Controllers
                     _logger.LogInformation("{id}: Requests for this camera will not be processed until {ignoreUntil}.",
                         id,
                         ignoreUntil);
-                    return Ok();
+                    return;
                 }
             }
 
@@ -102,7 +102,7 @@ namespace SynoAI.Controllers
                     // The camera is already running, so ignore this request
                     _logger.LogInformation("{id}: The request for this camera is already running and was ignored.",
                         id);
-                    return Ok();
+                    return;
                 }
                 else
                 {
@@ -116,6 +116,9 @@ namespace SynoAI.Controllers
             try
 
             {
+                // Kick off the autocleanup
+                CleanupOldImages();
+
                 // Wait if the camera has a wait
                 if (camera.Wait > 0)
                 {
@@ -136,7 +139,7 @@ namespace SynoAI.Controllers
                         snapshotCount,
                         Config.MaxSnapshots,
                         overallStopwatch.ElapsedMilliseconds);
-                    byte[]? snapshot = await GetSnapshot(id);
+                    byte[] snapshot = await GetSnapshot(id);
                     if (snapshot == null)
                     {
                         // Failed to get any result, so skip over this snapshot
@@ -150,17 +153,15 @@ namespace SynoAI.Controllers
                         overallStopwatch.ElapsedMilliseconds);
 
                     // See if the image needs to be rotated (or further processing in the future ?) before being analyzed by the AI
-                    // #19: PreProcessSnapshot now returns the encoded bytes AND, when rotation occurred,
-                    // the already-decoded SKBitmap to avoid a redundant decode in DressImage.
-                    var (processedBytes, processedBitmap) = PreProcessSnapshot(camera, snapshot);
+                    snapshot = PreProcessSnapshot(camera, snapshot);
 
-                    // Use the AI to get the valid predictions and then get all the valid predictions, where the result from the AI is
+                    // Use the AI to get the valid predictions and then get all the valid predictions, where the result from the AI is 
                     // in the list of types and where the size of the object is bigger than the defined value.
-                    IEnumerable<AIPrediction>? predictions = await GetAIPredications(camera, processedBytes);
+                    IEnumerable<AIPrediction> predictions = await GetAIPredications(camera, snapshot);
                     if (predictions == null)
                     {
                         // An error occured fetching predictions, so bail-out early.
-                        return Ok();
+                        return;
                     }
 
                     _logger.LogInformation("{id}: Snapshot {snapshotCount} of {ConfigMaxSnapshots} contains {predictionsCount} objects at EVENT TIME {overallStopwatchElapsedMilliseconds}ms.",
@@ -247,19 +248,19 @@ namespace SynoAI.Controllers
                     // Save the original unprocessed image if required
                     if (Config.SaveOriginalSnapshot == SaveSnapshotMode.Always ||
                         (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithPredictions && predictions.Any()) ||
-                        (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithValidPredictions && validPredictions.Count > 0))
+                        (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithValidPredictions && validPredictions.Any()))
                     {
                         _logger.LogInformation("{id}: Saving original image",
                             id);
-                        SnapshotManager.SaveOriginalImage(_logger, camera, processedBytes);
+                        SnapshotManager.SaveOriginalImage(_logger, camera, snapshot);
                     }
 
                     if (validPredictions.Count > 0)
                     {
-                        // Process and save the snapshot, passing the pre-decoded bitmap if available (#19)
-                        ProcessedImage processedImage = SnapshotManager.DressImage(camera, processedBytes, predictions, validPredictions, _logger, processedBitmap);
+                        // Process and save the snapshot
+                        ProcessedImage processedImage = SnapshotManager.DressImage(camera, snapshot, predictions, validPredictions, _logger);
 
-                        // Send Notifications
+                        // Send Notifications                  
                         Notification notification = new()
                         {
                             ProcessedImage = processedImage,
@@ -279,7 +280,7 @@ namespace SynoAI.Controllers
                         // Extend the delay until the next motion detection will be run if a delay after success is specified
                         int successDelay = camera.GetDelayAfterSuccess();
                         AddCameraDelay(id, successDelay);
-                        return Ok();
+                        return;
                     }
                     else if (predictions.Any())
                     {
@@ -329,8 +330,6 @@ namespace SynoAI.Controllers
                     _runningCameraChecks.Remove(id, out _);
                 }
             }
-
-            return Ok();
         }
         /// <summary>
         /// POSTs camera options with the specified ID.
@@ -340,13 +339,12 @@ namespace SynoAI.Controllers
         [HttpPost]
         [Route("{id}")]
 
-        public IActionResult Post(string id, [FromBody] CameraOptionsDto options)
+        public void Post(string id, [FromBody] CameraOptionsDto options)
         {
             if (options.HasChanged(x => x.Enabled))
             {
                 _enabledCameras.AddOrUpdate(id, options.Enabled, (key, oldValue) => options.Enabled);
             }
-            return Ok();
         }
 
         /// <summary>
@@ -360,7 +358,7 @@ namespace SynoAI.Controllers
         private bool ShouldIncludePrediction(string id, Camera camera, Stopwatch overallStopwatch, AIPrediction prediction)
         {
             // Check if the prediction falls within the exclusion zones
-            if (camera.Exclusions != null && camera.Exclusions.Count > 0)
+            if (camera.Exclusions != null && camera.Exclusions.Any())
             {
                 Rectangle boundary = new(prediction.MinX, prediction.MinY, prediction.SizeX, prediction.SizeY);
                 foreach (Zone exclusion in camera.Exclusions)
@@ -419,18 +417,60 @@ namespace SynoAI.Controllers
         }
 
         /// <summary>
+        /// Fires off an Async process to clean up any old records.
+        /// </summary>
+        private void CleanupOldImages()
+        {
+            if (!Directory.Exists(Constants.DIRECTORY_CAPTURES))
+            {
+                return;
+            }
+
+            if (Config.DaysToKeepCaptures > 0 && !_cleanupOldImagesRunning)
+            {
+                _logger.LogInformation("Captures Clean Up: Cleaning up images older than {ConfigDaysToKeepCaptures} day(s).",
+                    Config.DaysToKeepCaptures);
+                Task.Run(() =>
+                {
+                try
+                {
+                    lock (_cleanUpOldImagesLock)
+                    {
+                        _cleanupOldImagesRunning = true;
+                        DirectoryInfo directory = new(Constants.DIRECTORY_CAPTURES);
+                        IEnumerable<FileInfo> files = directory.GetFiles("*", new EnumerationOptions() { RecurseSubdirectories = true });
+                        foreach (FileInfo file in files)
+                        {
+                            double age = (DateTime.Now - file.CreationTime).TotalDays;
+                            if (age > Config.DaysToKeepCaptures)
+                            {
+                                _logger.LogInformation("Captures Clean Up: {file.FullName} is {age} day(s) old and will be deleted.",
+                                    file.FullName, age);
+                                System.IO.File.Delete(file.FullName);
+                                _logger.LogInformation("Captures Clean Up: {file.FullName} deleted.",
+                                   file.FullName);
+                            }
+                        }
+                        _cleanupOldImagesRunning = false;
+                    }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Captures Clean Up Failed");
+                    }
+                });
+            }
+        }
+        private bool _cleanupOldImagesRunning;
+        private readonly object _cleanUpOldImagesLock = new();
+
+        /// <summary>
         /// Handles any required preprocessing of the captured image.
-        /// When rotation is applied, the already-decoded <see cref="SKBitmap"/> is returned
-        /// alongside the JPEG bytes so that <see cref="SnapshotManager.DressImage"/> can
-        /// skip a redundant decode (fixes #19 — triple JPEG encode/decode on rotation).
         /// </summary>
         /// <param name="camera">The camera that the snapshot is from.</param>
         /// <param name="snapshot">The image data.</param>
-        /// <returns>
-        /// A tuple of the processed JPEG bytes and, if rotation was applied, the decoded
-        /// <see cref="SKBitmap"/>; otherwise <c>null</c> for the bitmap.
-        /// </returns>
-        private (byte[] bytes, SKBitmap? bitmap) PreProcessSnapshot(Camera camera, byte[] snapshot)
+        /// <returns>A byte array of the image.</returns>
+        private byte[] PreProcessSnapshot(Camera camera, byte[] snapshot)
         {
             if (camera.Rotate != 0)
             {
@@ -445,15 +485,15 @@ namespace SynoAI.Controllers
                 bitmap = Rotate(bitmap, camera.Rotate);
 
                 using SKPixmap pixmap = bitmap.PeekPixels();
-                using SKData? data = pixmap.Encode(SKEncodedImageFormat.Jpeg, 100);
+                using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, 100);
                 _logger.LogInformation("{cameraName}: Image preprocessing complete ({stopwatchElapsedMilliseconds}ms).",
                     camera.Name,
                     stopwatch.ElapsedMilliseconds);
-                return (data?.ToArray() ?? snapshot, bitmap);
+                return data.ToArray();
             }
             else
             {
-                return (snapshot, null);
+                return snapshot;
             }
         }
 
@@ -522,10 +562,10 @@ namespace SynoAI.Controllers
         /// </summary>
         /// <param name="cameraName">The name of the camera to get the snapshot for.</param>
         /// <returns>A byte array for the image, or null on failure.</returns>
-        private async Task<byte[]?> GetSnapshot(string cameraName)
+        private async Task<byte[]> GetSnapshot(string cameraName)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            byte[]? imageBytes = await _synologyService.TakeSnapshotAsync(cameraName);
+            byte[] imageBytes = await _synologyService.TakeSnapshotAsync(cameraName);
             stopwatch.Stop();
 
             if (imageBytes == null)
@@ -548,9 +588,9 @@ namespace SynoAI.Controllers
         /// <param name="camera">The camera that the image is from.</param>
         /// <param name="imageBytes">The in-memory image for processing.</param>
         /// <returns>A list of predictions, or null on failure.</returns>
-        private async Task<IEnumerable<AIPrediction>?> GetAIPredications(Camera camera, byte[] imageBytes)
+        private async Task<IEnumerable<AIPrediction>> GetAIPredications(Camera camera, byte[] imageBytes)
         {
-            IEnumerable<AIPrediction>? predictions = await _aiService.ProcessAsync(camera, imageBytes);
+            IEnumerable<AIPrediction> predictions = await _aiService.ProcessAsync(camera, imageBytes);
             if (predictions == null)
             {
                 _logger.LogError("{camera}: Failed to get get predictions.",

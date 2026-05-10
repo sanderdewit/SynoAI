@@ -8,7 +8,7 @@ namespace SynoAI.AIs.AIProcessor
     internal class AIProcessorAI : AI
     {
         public override AIType AIType => Config.AI;
-        public override async Task<IEnumerable<AIPrediction>?> Process(ILogger logger, Camera camera, byte[] image)
+        public override async Task<IEnumerable<AIPrediction>> Process(ILogger logger, Camera camera, byte[] image)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -110,7 +110,7 @@ namespace SynoAI.AIs.AIProcessor
                 aiType,
                 content);
 
-            return JsonConvert.DeserializeObject<AIProcessorResponse>(content)!;
+            return JsonConvert.DeserializeObject<AIProcessorResponse>(content);
         }
     }
 }

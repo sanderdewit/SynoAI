@@ -252,7 +252,7 @@ namespace SynoAI.Controllers
         private static int GetObjects(string filename)
         {
             string name = Path.GetFileNameWithoutExtension(filename);
-            int index = name.IndexOf('-');
+            int index = name.IndexOf("-");
             int objects;
             if (index != -1)
             {
@@ -314,7 +314,7 @@ namespace SynoAI.Controllers
         /// </summary>
         public static string GetTypes(Camera camera)
         {
-            if (camera.Types == null || !camera.Types.Any())
+            if (!camera.Types.Any())
             {
                 return "Any";
             }

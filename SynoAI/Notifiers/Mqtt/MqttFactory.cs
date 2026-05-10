@@ -8,10 +8,10 @@
             {
                 logger.LogInformation("Processing MQTT config");
 
-                string? host = section.GetValue<string?>("Host", null);
+                string host = section.GetValue<string>("Host", null);
                 int? port = section.GetValue<int?>("Port", null);
-                string? username = section.GetValue<string?>("Username", null);
-                string? password = section.GetValue<string?>("Password", null);
+                string username = section.GetValue<string>("Username", null);
+                string password = section.GetValue<string>("Password", null);
                 string baseTopic = section.GetValue<string>("BaseTopic", "synoai");
                 bool sendImage = section.GetValue<bool>("SendImage", false);
 

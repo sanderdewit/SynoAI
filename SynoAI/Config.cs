@@ -13,15 +13,15 @@ namespace SynoAI
         /// <summary>
         /// The URL to the synology API.
         /// </summary>
-        public static string Url { get; private set; } = string.Empty;
+        public static string Url { get; private set; }
         /// <summary>
         /// The username to login to the API with.
         /// </summary>
-        public static string? Username { get; private set; }
+        public static string Username { get; private set; }
         /// <summary>
         /// The password to login to the API with.
         /// </summary>
-        public static string? Password { get; private set; }
+        public static string Password { get; private set; }
         /// <summary>
         /// Allow insecure URL Access to the Synology API.
         /// </summary>
@@ -46,15 +46,15 @@ namespace SynoAI
         /// <summary>
         /// The hex code of the colour to use for the boxing around image matches.
         /// </summary>
-        public static string BoxColor { get; private set; } = string.Empty;
+        public static string BoxColor { get; private set; }
         /// <summary>
         /// The hex code of the colour to use for the exclusion boxes.
         /// </summary>
-        public static string ExclusionBoxColor { get; private set; } = string.Empty;
+        public static string ExclusionBoxColor { get; private set; }
         /// <summary>
         /// The hex code of the colour to use behind the text on the image outputs.
         /// </summary>
-        public static string TextBoxColor { get; private set; } = string.Empty;
+        public static string TextBoxColor { get; private set; }
 
         /// <summary>
         ///The stroke width of the Box drawn around the objects.
@@ -64,7 +64,7 @@ namespace SynoAI
         /// <summary>
         /// The font to use on the image labels.
         /// </summary>
-        public static string Font { get; private set; } = string.Empty;
+        public static string Font { get; private set; }
         /// <summary>
         /// The font size to use on the image labels.
         /// </summary>
@@ -72,7 +72,7 @@ namespace SynoAI
         /// <summary>
         /// The hex code of the colour to use on the image labels.
         /// </summary>
-        public static string FontColor { get; private set; } = string.Empty;
+        public static string FontColor { get; private set; }
         /// <summary>
         /// The offset from the left of the image boundary box.
         /// </summary>
@@ -110,11 +110,11 @@ namespace SynoAI
         /// <summary>
         /// The URL to access the AI.
         /// </summary>
-        public static string AIUrl { get; private set; } = string.Empty;
+        public static string AIUrl { get; private set; }
         /// <summary>
         /// Development use only. The internal path to call the AI. Potentially a better way to do this would be to support multiple AIs and have separate configs baked into each AI.
         /// </summary>
-        public static string AIPath { get; private set; } = string.Empty;
+        public static string AIPath { get; private set; }
 
         /// <summary>
         /// The period of time in milliseconds (ms) that must occur between the last motion detection of camera and the next time it'll be processed.
@@ -146,7 +146,7 @@ namespace SynoAI
         /// <summary>
         /// The list of cameras.
         /// </summary>
-        public static IEnumerable<Camera> Cameras { get; private set; } = Enumerable.Empty<Camera>();
+        public static IEnumerable<Camera> Cameras { get; private set; }
 
         /// <summary>
         /// Whether the captured image should:
@@ -163,12 +163,12 @@ namespace SynoAI
         /// <summary>
         /// The list of possible notifiers.
         /// </summary>
-        public static IEnumerable<INotifier> Notifiers { get; private set; } = Enumerable.Empty<INotifier>();
+        public static IEnumerable<INotifier> Notifiers { get; private set; }
 
         /// <summary>
         /// The URL to use for the SynoAI web frontend.
         /// </summary>
-        public static string? SynoAIUrL { get; private set; }
+        public static string SynoAIUrL { get; private set; }
 
         /// <summary>
         /// Generates the configuration from the provided IConfiguration.
@@ -179,7 +179,7 @@ namespace SynoAI
         {
             logger.LogInformation("Processing config.");
 
-            Url = configuration.GetValue<string>("Url") ?? string.Empty;
+            Url = configuration.GetValue<string>("Url");
 
             Username = configuration.GetValue<string>("User");  // "Username" returns the local system account when debugging, which isn't ideal. Need to resolve this.
             Password = configuration.GetValue<string>("Password");
@@ -195,12 +195,12 @@ namespace SynoAI
 
             StrokeWidth = configuration.GetValue<int>("StrokeWidth", 2);
 
-            BoxColor = configuration.GetValue<string>("BoxColor", SKColors.Green.ToString()) ?? SKColors.Green.ToString();
-            FontColor = configuration.GetValue<string>("FontColor", SKColors.Green.ToString()) ?? SKColors.Green.ToString();
-            ExclusionBoxColor = configuration.GetValue<string>("ExclusionBoxColor", SKColors.Red.ToString()) ?? SKColors.Red.ToString();
-            TextBoxColor = configuration.GetValue<string>("TextBoxColor", SKColors.Transparent.ToString()) ?? SKColors.Transparent.ToString();
+            BoxColor = configuration.GetValue<string>("BoxColor", SKColors.Green.ToString());
+            FontColor = configuration.GetValue<string>("FontColor", SKColors.Green.ToString());
+            ExclusionBoxColor = configuration.GetValue<string>("ExclusionBoxColor", SKColors.Red.ToString());
+            TextBoxColor = configuration.GetValue<string>("TextBoxColor", SKColors.Transparent.ToString());
 
-            Font = configuration.GetValue<string>("Font", "Tahoma") ?? "Tahoma";
+            Font = configuration.GetValue<string>("Font", "Tahoma");
             FontSize = configuration.GetValue<int>("FontSize", 12);
 
             TextOffsetX = configuration.GetValue<int>("TextOffsetX", 4);
@@ -227,16 +227,16 @@ namespace SynoAI
 
             IConfigurationSection aiSection = configuration.GetSection("AI");
             AI = aiSection.GetValue<AIType>("Type", AIType.CodeProjectAIServer);
-            AIUrl = aiSection.GetValue<string>("Url") ?? string.Empty;
-            AIPath = aiSection.GetValue<string>("Path", "v1/vision/detection") ?? "v1/vision/detection";
+            AIUrl = aiSection.GetValue<string>("Url");
+            AIPath = aiSection.GetValue<string>("Path", "v1/vision/detection");
 
             SynoAIUrL = configuration.GetValue<string>("SynoAIUrl");
 
-            Cameras = GenerateCameras(logger, configuration) ?? Enumerable.Empty<Camera>();
+            Cameras = GenerateCameras(logger, configuration);
             Notifiers = GenerateNotifiers(logger, configuration);
         }
 
-        private static List<Camera>? GenerateCameras(ILogger logger, IConfiguration configuration)
+        private static IEnumerable<Camera> GenerateCameras(ILogger logger, IConfiguration configuration)
         {
             logger.LogInformation("Processing camera config.");
 
@@ -244,7 +244,7 @@ namespace SynoAI
             return section.Get<List<Camera>>();
         }
 
-        private static List<INotifier> GenerateNotifiers(ILogger logger, IConfiguration configuration)
+        private static IEnumerable<INotifier> GenerateNotifiers(ILogger logger, IConfiguration configuration)
         {
             logger.LogInformation("Processing notifier config.");
 
@@ -253,7 +253,7 @@ namespace SynoAI
             IConfigurationSection section = configuration.GetSection("Notifiers");
             foreach (IConfigurationSection child in section.GetChildren())
             {
-                string type = child.GetValue<string>("Type") ?? string.Empty;
+                string type = child.GetValue<string>("Type");
 
                 if (!Enum.TryParse(type, out NotifierType notifier))
                 {
