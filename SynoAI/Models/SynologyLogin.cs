@@ -2,6 +2,6 @@
 {
     internal class SynologyLogin
     {
-        public string SID { get; set; }
+        public string SID { get; set; } = string.Empty;
     }
 }

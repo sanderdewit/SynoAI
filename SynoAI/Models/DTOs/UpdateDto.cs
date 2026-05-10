@@ -26,7 +26,8 @@ namespace SynoAI.Models.DTOs
         {
             if (expression.Body is not MemberExpression body)
             {
-                body = ((UnaryExpression)expression.Body).Operand as MemberExpression;
+                body = ((UnaryExpression)expression.Body).Operand as MemberExpression
+                    ?? throw new ArgumentException("Could not resolve member expression.", nameof(expression));
             }
             return HasChanged(body.Member.Name);
         }

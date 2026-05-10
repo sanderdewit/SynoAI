@@ -13,11 +13,11 @@ namespace SynoAI.Notifiers.Webhook
         /// <summary>
         /// The URL to send the request to.
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
         /// <summary>
         /// The HTTP method (POST/PUT/etc).
         /// </summary>
-        public string Method { get; set; }
+        public string Method { get; set; } = string.Empty;
 
         /// <summary>
         /// The type of authentication.
@@ -26,20 +26,20 @@ namespace SynoAI.Notifiers.Webhook
         /// <summary>
         /// The username when using Basic authentication.
         /// </summary>
-        public string Username { get; set; }
+        public string? Username { get; set; }
         /// <summary>
         /// The password to use when using Basic authentication.
         /// </summary>
-        public string Password { get; set; }
+        public string? Password { get; set; }
         /// <summary>
         /// The token to use when using Bearer authentication.
         /// </summary>
-        public string Token { get; set; }
+        public string? Token { get; set; }
 
         /// <summary>
         /// The field name when posting the image.
         /// </summary>
-        public string ImageField { get; set; }
+        public string ImageField { get; set; } = string.Empty;
         /// <summary>
         /// Whether the image should be sent in POST/PUT/PATCH requests. When this property is true, the request will made using 
         /// content-type of multipart/form-data.
@@ -60,7 +60,7 @@ namespace SynoAI.Notifiers.Webhook
             logger.LogInformation("{cameraName}: Webhook: Processing", camera.Name);
 
             using HttpClient client = GetHttpClient();
-            FileStream fileStream = null;
+            FileStream? fileStream = null;
             client.DefaultRequestHeaders.Authorization = GetAuthenticationHeader();
 
             IEnumerable<string> foundTypes = notification.FoundTypes;
@@ -81,7 +81,7 @@ namespace SynoAI.Notifiers.Webhook
                         { new StringContent(message), "\"message\"" }
                     };
 
-                string imageUrl = GetImageUrl(camera, notification);
+                string? imageUrl = GetImageUrl(camera, notification);
                 if (imageUrl != null)
                 {
                     form.Add(new StringContent(imageUrl), "\"imageUrl\"");
@@ -185,7 +185,7 @@ namespace SynoAI.Notifiers.Webhook
         /// Generates an authentication header for the client.
         /// </summary>
         /// <returns>An authentication header.</returns>
-        private AuthenticationHeaderValue GetAuthenticationHeader()
+        private AuthenticationHeaderValue? GetAuthenticationHeader()
         {
             string parameter;
             switch (Authentication)
@@ -195,7 +195,7 @@ namespace SynoAI.Notifiers.Webhook
                     parameter = Convert.ToBase64String(bytes);
                     break;
                 case AuthorizationMethod.Bearer:
-                    parameter = Token;
+                    parameter = Token ?? string.Empty;
                     break;
                 default:
                     return null;

@@ -12,15 +12,15 @@ namespace SynoAI.Notifiers.Telegram
         /// <summary>
         /// The ID of the chat to send notifications to
         /// </summary>
-        public string ChatID { get; set; }
+        public string ChatID { get; set; } = string.Empty;
         /// <summary>
         /// The token used to authenticate to Telegram
         /// </summary>
-        public string Token { get; set; }
+        public string Token { get; set; } = string.Empty;
         /// <summary>
         /// Photo base URL
         /// </summary>
-        public string PhotoBaseURL { get; set; }
+        public string? PhotoBaseURL { get; set; }
 
         /// <summary>
         /// Sends a message and an image using the Telegram API.

@@ -11,15 +11,15 @@ namespace SynoAI.Notifiers.Pushover
         /// <summary>
         /// The API Key for the application for sending the notification.
         /// </summary>
-        public string ApiKey { get; set; }
+        public string ApiKey { get; set; } = string.Empty;
         /// <summary>
         /// The User Key for the user for sending the notification.
         /// </summary>
-        public string UserKey { get; set; }
+        public string UserKey { get; set; } = string.Empty;
         /// <summary>
         /// The devices to send to.
         /// </summary>
-        public IEnumerable<string> Devices { get; set; }
+        public IEnumerable<string>? Devices { get; set; }
         /// <summary>
         /// The priority of the message.
         /// </summary>
@@ -35,19 +35,19 @@ namespace SynoAI.Notifiers.Pushover
         /// <summary>
         /// The pushover sound to use.
         /// </summary>
-        public string Sound { get; set; }
+        public string? Sound { get; set; }
 
 
         public override async Task SendAsync(Camera camera, Notification notification, ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(ApiKey))
             {
-                logger.LogError($"{nameof(ApiKey)} must be specified.");
+                logger.LogError("{Property} must be specified.", nameof(ApiKey));
                 return;
             }
             else if (string.IsNullOrWhiteSpace(UserKey))
             {
-                logger.LogError($"{nameof(UserKey)} must be specified.");
+                logger.LogError("{Property} must be specified.", nameof(UserKey));
                 return;
             }
 

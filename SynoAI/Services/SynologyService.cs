@@ -1,20 +1,15 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using SynoAI.Models;
-using System.Net;
 using System.Web;
 
 namespace SynoAI.Services
 {
     internal class SynologyService : ISynologyService
     {
-        /// <summary>
-        /// The current cookie with valid authentication.
-        /// </summary>
-        private static Cookie Cookie { get; set; }
-        /// <summary>
-        /// A list of all cameras mapped from the config friendly name to the Synology Camera ID.
-        /// </summary>
-        protected static Dictionary<string, int> Cameras { get; private set; }
+        // Synology session cookie value; refreshed automatically on expiry (errors 105/106).
+        private static string? _sessionCookieValue;
+
+        private static Dictionary<string, int> Cameras { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         private const string API_LOGIN = "SYNO.API.Auth";
         private const string API_CAMERA = "SYNO.SurveillanceStation.Camera";
@@ -22,79 +17,70 @@ namespace SynoAI.Services
         private const string URI_INFO = "webapi/query.cgi?api=SYNO.API.Info&version=1&method=query";
         private const string URI_LOGIN = "webapi/{0}?api=SYNO.API.Auth&method=Login&version={1}&account={2}&passwd={3}&session=SurveillanceStation";
         private const string URI_CAMERA_INFO = "webapi/{0}?api=SYNO.SurveillanceStation.Camera&method=List&version={1}";
-        private const string URI_CAMERA_SNAPSHOT = "webapi/{0}?version={1}&id={2}&api=\"SYNO.SurveillanceStation.Camera\"&method=GetSnapshot";
+        private const string URI_CAMERA_SNAPSHOT = "webapi/{0}?version={1}&id={2}&api=SYNO.SurveillanceStation.Camera&method=GetSnapshot";
 
-        /// <summary>
-        /// Holds the entry point to the SYNO.API.Auth API entry point.
-        /// </summary>
-        private static string LoginPath { get; set; }
-        /// <summary>
-        /// Holds the entry point to the SYNO.SurveillanceStation.Camera API entry point.
-        /// </summary>
-        private static string CameraPath { get; set; }
+        private static string? LoginPath { get; set; }
+        private static string? CameraPath { get; set; }
 
         private readonly IHostApplicationLifetime _applicationLifetime;
         private readonly ILogger<SynologyService> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public SynologyService(IHostApplicationLifetime applicationLifetime, ILogger<SynologyService> logger)
+        public SynologyService(IHostApplicationLifetime applicationLifetime, ILogger<SynologyService> logger, IHttpClientFactory httpClientFactory)
         {
             _applicationLifetime = applicationLifetime;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
+        private HttpClient GetSynologyClient()
+        {
+            HttpClient client = _httpClientFactory.CreateClient("Synology");
+            client.BaseAddress = new Uri(Config.Url);
+            return client;
+        }
 
-        /// <summary>
-        /// Fetches all the end points, because they're dynamic between DSM versions.
-        /// </summary>
+        private static HttpRequestMessage BuildRequest(HttpMethod method, string uri)
+        {
+            HttpRequestMessage request = new(method, uri);
+            if (_sessionCookieValue != null)
+                request.Headers.Add("Cookie", $"id={_sessionCookieValue}");
+            return request;
+        }
+
         public async Task<bool> GetEndPointsAsync()
         {
             _logger.LogInformation("API: Querying end points");
 
-            using HttpClient httpClient = GetHttpClient(Config.Url);
-            HttpResponseMessage result = await httpClient.GetAsync(URI_INFO);
+            HttpClient client = GetSynologyClient();
+            HttpResponseMessage result = await client.GetAsync(URI_INFO);
             if (result.IsSuccessStatusCode)
             {
                 SynologyResponse<SynologyApiInfoResponse> response = await GetResponse<SynologyApiInfoResponse>(result);
                 if (response.Success)
                 {
-                    // Find the Authentication entry point
-                    if (response.Data.TryGetValue(API_LOGIN, out SynologyApiInfo loginInfo))
+                    if (response.Data.TryGetValue(API_LOGIN, out SynologyApiInfo? loginInfo))
                     {
-                        _logger.LogDebug("API: Found path '{loginInfoPath}' for {API_LOGIN}",
-                            loginInfo.Path,
-                            API_LOGIN);
-
+                        _logger.LogDebug("API: Found path '{Path}' for {Api}", loginInfo.Path, API_LOGIN);
                         if (loginInfo.MaxVersion < Config.ApiVersionAuth)
-                        {
-                            _logger.LogError("API: {API_CAMERA} only supports a max version of {loginInfoMaxVersion}, but the system is set to use version {ConfigApiVersionAuth}.",
-                                API_CAMERA,
-                                loginInfo.MaxVersion,
-                                Config.ApiVersionAuth);
-                        }
+                            _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, loginInfo.MaxVersion, Config.ApiVersionAuth);
                     }
                     else
                     {
-                        _logger.LogError($"API: Failed to find {API_LOGIN}.");
+                        _logger.LogError("API: Failed to find {Api}.", API_LOGIN);
+                        return false;
                     }
 
-                    // Find the Camera entry point
-                    if (response.Data.TryGetValue(API_CAMERA, out SynologyApiInfo cameraInfo))
+                    if (response.Data.TryGetValue(API_CAMERA, out SynologyApiInfo? cameraInfo))
                     {
-                        _logger.LogDebug("API: Found path '{cameraInf.Path}' for {API_CAMERA}",
-                            cameraInfo.Path,
-                            API_CAMERA);
-
+                        _logger.LogDebug("API: Found path '{Path}' for {Api}", cameraInfo.Path, API_CAMERA);
                         if (cameraInfo.MaxVersion < Config.ApiVersionCamera)
-                        {
-                            _logger.LogError("API: {API_CAMERA} only supports a max version of {cameraInfoMaxVersion}, but the system is set to use version {ConfigApiVersionCamera}.",
-                                API_CAMERA,
-                                cameraInfo.MaxVersion,
-                                Config.ApiVersionCamera);
-                        }
+                            _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, cameraInfo.MaxVersion, Config.ApiVersionCamera);
                     }
                     else
                     {
-                        _logger.LogError($"API: Failed to find {API_CAMERA}.");
+                        _logger.LogError("API: Failed to find {Api}.", API_CAMERA);
+                        return false;
                     }
 
                     LoginPath = loginInfo.Path;
@@ -105,33 +91,24 @@ namespace SynoAI.Services
                 }
                 else
                 {
-                    _logger.LogError("API: Failed due to error code '{responseErrorCode}'",
-                        response.Error.Code);
+                    _logger.LogError("API: Failed due to error code '{Code}'", response.Error?.Code);
                 }
             }
             else
             {
-                _logger.LogError("API: Failed due to HTTP status code '{resultStatusCode}'",
-                    result.StatusCode);
+                _logger.LogError("API: Failed due to HTTP status code '{StatusCode}'", result.StatusCode);
             }
             return false;
         }
 
-        /// <summary>
-        /// Generates a login cookie for the username and password in the config.
-        /// </summary>
-        /// <returns>A cookie, or null on failure.</returns>
-        public async Task<Cookie> LoginAsync()
+        private async Task<string?> LoginAsync()
         {
             _logger.LogInformation("Login: Authenticating");
 
             string loginUri = string.Format(URI_LOGIN, LoginPath, Config.ApiVersionAuth, Config.Username, SanitisePassword(Config.Password));
-            _logger.LogDebug("Login: Logging in ({loginUri})",
-                loginUri);
 
-            CookieContainer cookieContainer = new();
-            using HttpClient httpClient = GetHttpClient(Config.Url, cookieContainer);
-            HttpResponseMessage result = await httpClient.GetAsync(loginUri);
+            HttpClient client = GetSynologyClient();
+            HttpResponseMessage result = await client.GetAsync(loginUri);
             if (result.IsSuccessStatusCode)
             {
                 SynologyResponse<SynologyLogin> response = await GetResponse<SynologyLogin>(result);
@@ -139,175 +116,149 @@ namespace SynoAI.Services
                 {
                     _logger.LogInformation("Login: Successful");
 
-                    IEnumerable<Cookie> cookies = cookieContainer.GetCookies(httpClient.BaseAddress).Cast<Cookie>().ToList();
-                    Cookie cookie = cookies.FirstOrDefault(x => x.Name == "id");
-                    if (cookie == null)
+                    // Parse session cookie from Set-Cookie response header (UseCookies=false so we do it manually)
+                    if (result.Headers.TryGetValues("Set-Cookie", out IEnumerable<string>? setCookies))
                     {
-                        _applicationLifetime.StopApplication();
+                        foreach (string cookie in setCookies)
+                        {
+                            string[] parts = cookie.Split(';')[0].Split('=');
+                            if (parts.Length == 2 && parts[0].Trim().Equals("id", StringComparison.OrdinalIgnoreCase))
+                                return parts[1].Trim();
+                        }
                     }
 
-                    return cookie;
+                    _logger.LogError("Login: Successful but session cookie 'id' not found in response.");
+                    _applicationLifetime.StopApplication();
+                    return null;
                 }
                 else
                 {
-                    _logger.LogError("Login: Failed due to Synology API error code '{responseErrorCode}'",
-                    response.Error.Code);
+                    _logger.LogError("Login: Failed due to Synology API error code '{Code}'", response.Error?.Code);
                 }
             }
             else
             {
-                _logger.LogError("Login: Failed due to HTTP status code '{resultStatusCode}'",
-                    result.StatusCode);
+                _logger.LogError("Login: Failed due to HTTP status code '{StatusCode}'", result.StatusCode);
             }
             return null;
         }
 
-        /// <summary>
-        /// HTML encodes any unsupported characters that DSM cannot handle in the query strings.
-        /// </summary>
-        /// <returns>The sanitised password.</returns>
         private static string SanitisePassword(string original)
         {
             return HttpUtility.UrlEncode(original);
         }
 
-        /// <summary>
-        /// Fetches all of the required camera information from the API.
-        /// </summary>
-        /// <returns>A list of all cameras.</returns>
-        public async Task<IEnumerable<SynologyCamera>> GetCamerasAsync()
+        private async Task<IEnumerable<SynologyCamera>?> GetCamerasAsync()
         {
             _logger.LogInformation("GetCameras: Fetching Cameras");
 
-            CookieContainer cookieContainer = new();
-            using HttpClient client = GetHttpClient(Config.Url, cookieContainer);
-            cookieContainer.Add(client.BaseAddress, new Cookie("id", Cookie.Value));
-
+            HttpClient client = GetSynologyClient();
             string cameraInfoUri = string.Format(URI_CAMERA_INFO, CameraPath, Config.ApiVersionCamera);
-            HttpResponseMessage result = await client.GetAsync(cameraInfoUri);
+            using HttpRequestMessage request = BuildRequest(HttpMethod.Get, cameraInfoUri);
+            HttpResponseMessage result = await client.SendAsync(request);
 
             SynologyResponse<SynologyCameras> response = await GetResponse<SynologyCameras>(result);
             if (response.Success)
             {
-                _logger.LogInformation("GetCameras: Successful. Found {responseDataCamerasCount} cameras.",
-                    response.Data.Cameras.Count());
+                int cameraCount = response.Data.Cameras.Count();
+                _logger.LogInformation("GetCameras: Successful. Found {Count} cameras.", cameraCount);
                 return response.Data.Cameras;
             }
             else
             {
-                _logger.LogError("GetCameras: Failed due to error code '{responseErrorCode}'",
-                    response.Error.Code);
+                _logger.LogError("GetCameras: Failed due to error code '{Code}'", response.Error?.Code);
             }
-
             return null;
         }
 
-        /// <summary>
-        /// Takes a snapshot of the specified camera.
-        /// </summary>
-        /// <returns>A string to the file path.</returns>
-        public async Task<byte[]> TakeSnapshotAsync(string cameraName)
+        public async Task<byte[]?> TakeSnapshotAsync(string cameraName)
         {
-            CookieContainer cookieContainer = new();
-            using HttpClient client = GetHttpClient(Config.Url, cookieContainer);
-            cookieContainer.Add(client.BaseAddress, new Cookie("id", Cookie.Value));
+            return await TakeSnapshotInternalAsync(cameraName, isRetry: false);
+        }
 
-            if (Cameras.TryGetValue(cameraName, out int id))
+        private async Task<byte[]?> TakeSnapshotInternalAsync(string cameraName, bool isRetry)
+        {
+            if (!Cameras.TryGetValue(cameraName, out int id))
             {
-                _logger.LogDebug("{cameraName}: Found with Synology ID '{id}'.",
-                    cameraName
-                    , id);
+                _logger.LogError("The camera with the name '{CameraName}' was not found in the Synology camera list.", cameraName);
+                return null;
+            }
 
-                string resource = string.Format(URI_CAMERA_SNAPSHOT + $"&profileType={(int)Config.Quality}", CameraPath, Config.ApiVersionCamera, id);
-                _logger.LogDebug("{cameraName}: Taking snapshot from '{resource}'.",
-                    cameraName,
-                    resource);
+            _logger.LogDebug("{CameraName}: Found with Synology ID '{Id}'.", cameraName, id);
 
-                _logger.LogInformation("{cameraName}: Taking snapshot",
-                    cameraName);
-                using HttpResponseMessage response = await client.GetAsync(resource, HttpCompletionOption.ResponseHeadersRead);
-                response.EnsureSuccessStatusCode();
+            string resource = string.Format(URI_CAMERA_SNAPSHOT + $"&profileType={(int)Config.Quality}", CameraPath, Config.ApiVersionCamera, id);
+            _logger.LogDebug("{CameraName}: Taking snapshot from '{Resource}'.", cameraName, resource);
+            _logger.LogInformation("{CameraName}: Taking snapshot", cameraName);
 
-                if (response.Content.Headers.ContentType.MediaType == "image/jpeg")
-                {
-                    // Only return the bytes when we have a valid image back
-                    _logger.LogDebug("{cameraName}: Reading snapshot",
-                        cameraName);
-                    return await response.Content.ReadAsByteArrayAsync();
-                }
-                else
-                {
-                    // We didn't get an image type back, so this must have errored
-                    SynologyResponse errorResponse = await GetErrorResponse(response);
-                    if (errorResponse.Success)
-                    {
-                        // This should never happen, but let's add logging just in case
-                        _logger.LogError("{cameraName}: Failed to get snapshot, but the API reported success.",
-                            cameraName);
-                    }
-                    else
-                    {
-                        _logger.LogError("{cameraName}: Failed to get snapshot with error code '{errorResponseErrorCode}'",
-                            cameraName,
-                            errorResponse.Error.Code);
-                    }
-                }
+            HttpClient client = GetSynologyClient();
+            using HttpRequestMessage request = BuildRequest(HttpMethod.Get, resource);
+            using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            if (response.Content.Headers.ContentType?.MediaType == "image/jpeg")
+            {
+                _logger.LogDebug("{CameraName}: Reading snapshot", cameraName);
+                return await response.Content.ReadAsByteArrayAsync();
+            }
+
+            // Non-image response — likely an auth or API error
+            SynologyResponse errorResponse = await GetErrorResponse(response);
+            if (!isRetry && IsSessionExpiredError(errorResponse))
+            {
+                _logger.LogWarning("{CameraName}: Session expired (code {Code}), re-authenticating...", cameraName, errorResponse.Error?.Code);
+                _sessionCookieValue = await LoginAsync();
+                if (_sessionCookieValue != null)
+                    return await TakeSnapshotInternalAsync(cameraName, isRetry: true);
+            }
+            else if (errorResponse.Success)
+            {
+                _logger.LogError("{CameraName}: Failed to get snapshot, but the API reported success.", cameraName);
             }
             else
             {
-                _logger.LogError("The camera with the name '{cameraName}' was not found in the Synology camera list.",
-                    cameraName);
+                _logger.LogError("{CameraName}: Failed to get snapshot with error code '{Code}'", cameraName, errorResponse.Error?.Code);
             }
 
             return null;
         }
 
-        /// <summary>
-        /// Fetches the response content and parses it to the specified type.
-        /// </summary>
-        /// <typeparam name="T">The type of the return 'data'.</typeparam>
-        /// <param name="message">The message to parse.</param>
-        /// <returns>A Synology response object.</returns>
+        private static bool IsSessionExpiredError(SynologyResponse errorResponse)
+        {
+            string? code = errorResponse.Error?.Code;
+            return code == "105" || code == "106";
+        }
+
         private static async Task<SynologyResponse<T>> GetResponse<T>(HttpResponseMessage message)
         {
             string content = await message.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<SynologyResponse<T>>(content);
+            return JsonConvert.DeserializeObject<SynologyResponse<T>>(content)!;
         }
 
-        /// <summary>
-        /// Fetches the error response content and parses it to the specified type.
-        /// </summary>
-        /// <param name="message">The message to parse.</param>
-        /// <returns>A Synology response object.</returns>
         private static async Task<SynologyResponse> GetErrorResponse(HttpResponseMessage message)
         {
             string content = await message.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<SynologyResponse>(content);
+            return JsonConvert.DeserializeObject<SynologyResponse>(content)!;
         }
 
         public async Task InitialiseAsync()
         {
             _logger.LogInformation("Initialising");
-
-            // Get the actual end points, because they're not guaranteed to be the same on all installations and DSM versions
             try
             {
                 bool retrievedEndPoints = await GetEndPointsAsync();
                 if (!retrievedEndPoints)
                 {
                     _applicationLifetime.StopApplication();
+                    return;
                 }
 
-                // Perform a login first as all actions need a valid cookie
-                Cookie = await LoginAsync();
-                if (Cookie == null)
+                _sessionCookieValue = await LoginAsync();
+                if (_sessionCookieValue == null)
                 {
-                    // The login failed, so kill the application
                     _applicationLifetime.StopApplication();
                     return;
                 }
 
-                // If no cameras are specified, then bail out
                 if (Config.Cameras == null || !Config.Cameras.Any())
                 {
                     _logger.LogWarning("Aborting Initialisation: No Cameras were specified in the config.");
@@ -315,7 +266,6 @@ namespace SynoAI.Services
                     return;
                 }
 
-                // If no notifications are specified, then bail out
                 if (Config.Notifiers == null || !Config.Notifiers.Any())
                 {
                     _logger.LogWarning("Aborting Initialisation: No Notifications were specified in the config.");
@@ -323,30 +273,21 @@ namespace SynoAI.Services
                     return;
                 }
 
-                // Fetch all the cameras and store a Name to ID dictionary for quick lookup
-                IEnumerable<SynologyCamera> synologyCameras = await GetCamerasAsync();
+                IEnumerable<SynologyCamera>? synologyCameras = await GetCamerasAsync();
                 if (synologyCameras == null)
                 {
-                    // We failed to fetch the cameras, so kill the application
                     _applicationLifetime.StopApplication();
                     return;
                 }
-                else
+
+                Cameras = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                foreach (Camera camera in Config.Cameras)
                 {
-                    Cameras = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                    foreach (Camera camera in Config.Cameras)
-                    {
-                        SynologyCamera match = synologyCameras.FirstOrDefault(x => x.GetName().Equals(camera.Name, StringComparison.OrdinalIgnoreCase));
-                        if (match == null)
-                        {
-                            _logger.LogWarning("Initialise: The camera with the name '{cameraName}' was not found in the Surveillance Station camera list.",
-                                camera.Name);
-                        }
-                        else
-                        {
-                            Cameras.Add(camera.Name, match.Id);
-                        }
-                    }
+                    SynologyCamera? match = synologyCameras.FirstOrDefault(x => x.GetName().Equals(camera.Name, StringComparison.OrdinalIgnoreCase));
+                    if (match == null)
+                        _logger.LogWarning("Initialise: The camera '{CameraName}' was not found in the Surveillance Station camera list.", camera.Name);
+                    else
+                        Cameras.Add(camera.Name, match.Id);
                 }
 
                 _logger.LogInformation("Initialisation successful.");
@@ -356,43 +297,6 @@ namespace SynoAI.Services
                 _logger.LogError(ex, "An unhandled exception occurred initialising SynoAI. Exiting...");
                 _applicationLifetime.StopApplication();
             }
-        }
-
-        /// <summary>
-        /// Generates an HttpClient object.
-        /// </summary>
-        /// <param name="baseAddress">The base URI.</param>
-        /// <param name="cookieContainer">The container for the cookies.</param>
-        /// <returns>An HttpClient.</returns>
-        private static HttpClient GetHttpClient(string baseAddress, CookieContainer cookieContainer = null)
-        {
-            Uri uri = new(baseAddress);
-            return GetHttpClient(uri, cookieContainer);
-        }
-
-        /// <summary>
-        /// Generates an HttpClient object.
-        /// </summary>
-        /// <param name="baseUri">The base URI.</param>
-        /// <param name="cookieContainer">The container for the cookies.</param>
-        /// <returns>An HttpClient.</returns>
-        private static HttpClient GetHttpClient(Uri baseUri, CookieContainer cookieContainer = null)
-        {
-            HttpClientHandler httpClientHandler = new();
-            if (cookieContainer != null)
-            {
-                httpClientHandler.CookieContainer = cookieContainer;
-            }
-
-            if (Config.AllowInsecureUrl)
-            {
-                httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
-            }
-
-            return new HttpClient(httpClientHandler)
-            {
-                BaseAddress = baseUri
-            };
         }
     }
 }

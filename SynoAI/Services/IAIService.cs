@@ -14,6 +14,6 @@ namespace SynoAI.Services
         /// <param name="image">The image data to be processed.</param>
         /// <returns>A task that represents the asynchronous operation.
         /// The task result contains an enumerable collection of AI predictions.</returns>
-        Task<IEnumerable<AIPrediction>> ProcessAsync(Camera camera, byte[] image);
+        Task<IEnumerable<AIPrediction>?> ProcessAsync(Camera camera, byte[] image);
     }
 }

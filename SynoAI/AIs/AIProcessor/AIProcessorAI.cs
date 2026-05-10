@@ -8,7 +8,7 @@ namespace SynoAI.AIs.AIProcessor
     internal class AIProcessorAI : AI
     {
         public override AIType AIType => Config.AI;
-        public override async Task<IEnumerable<AIPrediction>> Process(ILogger logger, Camera camera, byte[] image)
+        public override async Task<IEnumerable<AIPrediction>?> Process(ILogger logger, Camera camera, byte[] image)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -20,12 +20,13 @@ namespace SynoAI.AIs.AIProcessor
                 { new StringContent(minConfidence.ToString()), "min_confidence" } // From face detection example - using JSON with MinConfidence didn't always work
             };
 
-            logger.LogDebug("{CameraName}: {AIType}: POSTing image with minimum confidence of {MinConfidence} ({CameraThreshold}%) to {Url}.",
+            logger.LogDebug("{CameraName}: {AIType}: POSTing image with minimum confidence of {MinConfidence} ({CameraThreshold}%) to {BaseUrl}/{Path}.",
                 camera.Name,
-                this.AIType,
+                this.AIType.ToString(),
                 minConfidence,
                 camera.Threshold,
-                string.Join("/", Config.AIUrl, Config.AIPath));
+                Config.AIUrl,
+                Config.AIPath);
 
             Uri uri = GetUri(Config.AIUrl, Config.AIPath);
 
@@ -48,9 +49,10 @@ namespace SynoAI.AIs.AIProcessor
                         }).ToList();
 
                         stopwatch.Stop();
+                        string aiTypeName = this.AIType.ToString();
                         logger.LogInformation("{CameraName}: {AIType}: Processed successfully ({ElapsedMilliseconds}ms).",
                             camera.Name,
-                            this.AIType,
+                            aiTypeName,
                             stopwatch.ElapsedMilliseconds);
 
                         return predictions;
@@ -105,12 +107,13 @@ namespace SynoAI.AIs.AIProcessor
         private static async Task<AIProcessorResponse> GetResponse(ILogger logger, Camera camera, HttpResponseMessage message, AIType aiType)
         {
             string content = await message.Content.ReadAsStringAsync();
+            string aiTypeStr = aiType.ToString();
             logger.LogDebug("{cameraName}: {AIType}: Responded with {content}.",
                 camera.Name,
-                aiType,
+                aiTypeStr,
                 content);
 
-            return JsonConvert.DeserializeObject<AIProcessorResponse>(content);
+            return JsonConvert.DeserializeObject<AIProcessorResponse>(content)!;
         }
     }
 }

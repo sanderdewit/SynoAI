@@ -7,6 +7,6 @@ namespace SynoAI.Notifiers.SynologyChat
         [JsonProperty("success")]
         public bool Success { get; set; }
         [JsonProperty("error")]
-        public SynologyChatErrorResponse Error { get; set; }
+        public SynologyChatErrorResponse? Error { get; set; }
     }
 }

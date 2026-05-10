@@ -15,17 +15,18 @@ namespace SynoAI.Services
         /// <param name="predictions">The list of predictions with the right size (but may or may not be the types configured as interest for this camera).</param>
         /// <param name="validPredictions">The list of predictions with the right size and matching the type of objects of interest for this camera.</param>
         /// <param name="logger"></param>
-        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger)
+        /// <param name="preloadedBitmap">Optional pre-decoded bitmap from rotation, to avoid a redundant decode.</param>
+        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger, SKBitmap? preloadedBitmap = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            // Load the bitmap 
-            SKBitmap image = SKBitmap.Decode(snapshot);
+            // Reuse the bitmap from rotation if provided, avoiding a redundant decode.
+            SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException("Failed to decode snapshot.");
 
             // Draw the exclusion zones if enabled
             if (Config.DrawExclusions && camera.Exclusions != null)
             {
-                logger.LogInformation("{camera.Name}: Drawing exclusion zones.",
+                logger.LogInformation("{CameraName}: Drawing exclusion zones.",
                     camera.Name);
 
                 using SKCanvas canvas = new(image);
@@ -45,13 +46,13 @@ namespace SynoAI.Services
             // Don't process the drawing if the drawing mode is off
             if (Config.DrawMode == DrawMode.Off)
             {
-                logger.LogInformation("{camera.Name}: Draw mode is Off. Skipping image boundaries.",
+                logger.LogInformation("{CameraName}: Draw mode is Off. Skipping image boundaries.",
                     camera.Name);
             }
             else
             {
                 // Draw the predictions
-                logger.LogInformation("{camera.Name}: Dressing image with boundaries.",
+                logger.LogInformation("{CameraName}: Dressing image with boundaries.",
                     camera.Name);
                 using SKCanvas canvas = new(image);
                 int counter = 1; //used for assigning a reference number on each prediction if AlternativeLabelling is true
@@ -141,7 +142,7 @@ namespace SynoAI.Services
             }
 
             stopwatch.Stop();
-            logger.LogInformation("{camera.Name}: Finished dressing image boundaries ({stopwatchElapsedMilliseconds}ms).",
+            logger.LogInformation("{CameraName}: Finished dressing image boundaries ({ElapsedMs}ms).",
                 camera.Name,
                 stopwatch.ElapsedMilliseconds);
 
@@ -159,7 +160,7 @@ namespace SynoAI.Services
         /// <param name="snapshot">The image to save.</param>
         public static string SaveOriginalImage(ILogger logger, Camera camera, byte[] snapshot)
         {
-            SKBitmap image = SKBitmap.Decode(new MemoryStream(snapshot));
+            SKBitmap image = SKBitmap.Decode(new MemoryStream(snapshot)) ?? throw new InvalidOperationException("Failed to decode original snapshot.");
             return SaveImage(logger, camera, image, "Original");
         }
 
@@ -171,7 +172,7 @@ namespace SynoAI.Services
         /// <param name="camera">The camera to save the image for.</param>
         /// <param name="image">The image to save.</param>
         /// <param name="suffix"></param>
-        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string suffix = null)
+        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string? suffix = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -180,8 +181,8 @@ namespace SynoAI.Services
 
             if (!Directory.Exists(directory))
             {
-                logger.LogInformation("{camera}: Creating directory '{directory}'.",
-                    camera,
+                logger.LogInformation("{CameraName}: Creating directory '{Directory}'.",
+                    camera.Name,
                     directory);
                 Directory.CreateDirectory(directory);
             }
@@ -212,8 +213,8 @@ namespace SynoAI.Services
             }
 
             string filePath = Path.Combine(directory, fileName);
-            logger.LogInformation("{camera}: Saving image to '{filePath}'.",
-                camera,
+            logger.LogInformation("{CameraName}: Saving image to '{FilePath}'.",
+                camera.Name,
                 filePath);
 
             using (FileStream saveStream = new(filePath, FileMode.CreateNew))
@@ -223,15 +224,15 @@ namespace SynoAI.Services
 
                 if (saved)
                 {
-                    logger.LogInformation("{camera}: Image saved to '{filePath}' ({stopwatchElapsedMilliseconds}ms).",
-                        camera,
+                    logger.LogInformation("{CameraName}: Image saved to '{FilePath}' ({ElapsedMs}ms).",
+                        camera.Name,
                         filePath,
                         stopwatch.ElapsedMilliseconds);
                 }
                 else
                 {
-                    logger.LogInformation("{camera}: Failed to save image to '{filePath}' ({stopwatchElapsedMilliseconds}ms).",
-                        camera,
+                    logger.LogInformation("{CameraName}: Failed to save image to '{FilePath}' ({ElapsedMs}ms).",
+                        camera.Name,
                         filePath,
                         stopwatch.ElapsedMilliseconds);
                 }

@@ -4,13 +4,13 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Features>strict</Features>
-		<Nullable>disable</Nullable>
+		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<UserSecretsId>28d148b3-8b53-4408-a54f-bf5663c58802</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-		<AnalysisLevel>6.0-minimum</AnalysisLevel>
+		<AnalysisLevel>9-minimum</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

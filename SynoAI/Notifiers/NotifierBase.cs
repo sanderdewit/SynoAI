@@ -6,8 +6,8 @@ namespace SynoAI.Notifiers
 {
     internal abstract class NotifierBase : INotifier
     {
-        public IEnumerable<string> Cameras { get; set; }
-        public IEnumerable<string> Types { get; set; }
+        public IEnumerable<string>? Cameras { get; set; }
+        public IEnumerable<string>? Types { get; set; }
 
 
         public virtual Task InitializeAsync(ILogger logger) { return Task.CompletedTask; }
@@ -16,7 +16,7 @@ namespace SynoAI.Notifiers
 
         public virtual Task CleanupAsync(ILogger logger) { return Task.CompletedTask; }
 
-        protected static string GetMessage(Camera camera, IEnumerable<string> foundTypes, List<AIPrediction> predictions, string errorMessage = null)
+        protected static string GetMessage(Camera camera, IEnumerable<string> foundTypes, List<AIPrediction> predictions, string? errorMessage = null)
         {
             string result;
 
@@ -56,7 +56,7 @@ namespace SynoAI.Notifiers
             return result;
         }
 
-        protected static string GetImageUrl(Camera camera, Notification notification)
+        protected static string? GetImageUrl(Camera camera, Notification notification)
         {
             if (Config.SynoAIUrL == null)
             {
@@ -94,7 +94,7 @@ namespace SynoAI.Notifiers
                 jsonObject.image = ToBase64String(notification.ProcessedImage.GetReadonlyStream());
             }
 
-            string imageUrl = GetImageUrl(camera, notification);
+            string? imageUrl = GetImageUrl(camera, notification);
             if (imageUrl != null)
             {
                 jsonObject.imageUrl = imageUrl;
@@ -110,7 +110,7 @@ namespace SynoAI.Notifiers
         private static string ToBase64String(FileStream fileStream)
         {
             byte[] buffer = new byte[fileStream.Length];
-            fileStream.Read(buffer, 0, (int)fileStream.Length);
+            fileStream.ReadExactly(buffer, 0, (int)fileStream.Length);
 
             return Convert.ToBase64String(buffer);
         }
@@ -123,7 +123,7 @@ namespace SynoAI.Notifiers
         protected static async Task<T> GetResponse<T>(HttpResponseMessage message)
         {
             string content = await message.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(content);
+            return JsonConvert.DeserializeObject<T>(content)!;
         }
     }
 }

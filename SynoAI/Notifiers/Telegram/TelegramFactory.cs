@@ -8,9 +8,9 @@ namespace SynoAI.Notifiers.Telegram
             {
                 logger.LogInformation("Processing Telegram Config");
 
-                string token = section.GetValue<string>("Token");
-                string chatId = section.GetValue<string>("ChatID");
-                string photoBaseURL = section.GetValue<string>("PhotoBaseURL");
+                string token = section.GetValue<string>("Token") ?? string.Empty;
+                string chatId = section.GetValue<string>("ChatID") ?? string.Empty;
+                string? photoBaseURL = section.GetValue<string>("PhotoBaseURL");
 
                 return new Telegram()
                 {

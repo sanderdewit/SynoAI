@@ -1,4 +1,4 @@
-﻿namespace SynoAI.Notifiers.Mqtt
+namespace SynoAI.Notifiers.Mqtt
 {
     internal class MqttFactory : NotifierFactory
     {
@@ -8,11 +8,11 @@
             {
                 logger.LogInformation("Processing MQTT config");
 
-                string host = section.GetValue<string>("Host", null);
+                string? host = section.GetValue<string>("Host");
                 int? port = section.GetValue<int?>("Port", null);
-                string username = section.GetValue<string>("Username", null);
-                string password = section.GetValue<string>("Password", null);
-                string baseTopic = section.GetValue<string>("BaseTopic", "synoai");
+                string? username = section.GetValue<string>("Username");
+                string? password = section.GetValue<string>("Password");
+                string? baseTopic = section.GetValue<string>("BaseTopic", "synoai");
                 bool sendImage = section.GetValue<bool>("SendImage", false);
 
                 Mqtt mqtt = new()

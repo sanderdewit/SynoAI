@@ -1,21 +1,47 @@
 using Microsoft.OpenApi;
 using SynoAI.Hubs;
 using SynoAI.Services;
+using SynoAI.Settings;
+using System.Net.Security;
 
 namespace SynoAI
 {
-    /// <summary>
-    /// Configures the services for the application.
-    /// </summary>
     public class Startup
     {
-        /// <summary>
-        /// Configures the services for the application.
-        /// </summary>
+        private readonly IConfiguration _configuration;
+
+        public Startup(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
+            // Strongly-typed settings (IOptions<AppSettings> available throughout the app)
+            services.Configure<AppSettings>(_configuration);
+
+            // Named HttpClient for Synology API — pooled handler avoids socket exhaustion.
+            // Handler is created lazily so Config.AllowInsecureUrl is populated by then.
+            services.AddHttpClient("Synology").ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                var handler = new SocketsHttpHandler
+                {
+                    PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+                    UseCookies = false
+                };
+                if (Config.AllowInsecureUrl)
+                {
+                    handler.SslOptions = new SslClientAuthenticationOptions
+                    {
+                        RemoteCertificateValidationCallback = (_, _, _, _) => true
+                    };
+                }
+                return handler;
+            });
+
+            // Singleton so SynoAIStartupService (IHostedService) can inject it without scope issues
+            services.AddSingleton<ISynologyService, SynologyService>();
             services.AddScoped<IAIService, AIService>();
-            services.AddScoped<ISynologyService, SynologyService>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -24,15 +50,14 @@ namespace SynoAI
             });
 
             services.AddRazorPages();
-
-            // euquiq: Needed for realtime update from each camera valid snapshot into client's web browser
             services.AddSignalR();
+
+            // Background services
+            services.AddHostedService<SynoAIStartupService>();
+            services.AddHostedService<CaptureCleanupService>();
         }
 
-        /// <summary>
-        /// Configures the application.
-        /// </summary>
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration, IHostApplicationLifetime lifetime, ILogger<Startup> logger, ISynologyService synologyService)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration, ILogger<Startup> logger)
         {
             Config.Generate(logger, configuration);
 
@@ -43,37 +68,14 @@ namespace SynoAI
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SynoAI v1"));
             }
 
-            // euquiq: Allows /wwwroot's static files (mainly our Javascript code for RT monitoring the cameras)
             app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                // euquiq: Used by SignalR to contact each online client with snapshot updates
                 endpoints.MapHub<SynoAIHub>("/synoaiHub");
-
-                // euquiq: Web interface mapped inside HomeController.cs
                 endpoints.MapControllers();
-            });
-
-            lifetime.ApplicationStarted.Register(() =>
-            {
-                List<Task> initializationTasks = new()
-                {
-                    synologyService.InitialiseAsync()
-                };
-                initializationTasks.AddRange(Config.Notifiers.Select(n => n.InitializeAsync(logger)));
-                Task.WhenAll(initializationTasks).Wait();
-            });
-
-            lifetime.ApplicationStopping.Register(() =>
-            {
-                List<Task> cleanupTasks = new();
-                cleanupTasks.AddRange(Config.Notifiers.Select(n => n.CleanupAsync(logger)));
-                Task.WhenAll(cleanupTasks).Wait();
             });
         }
     }

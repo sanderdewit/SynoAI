@@ -11,11 +11,11 @@ namespace SynoAI.Notifiers.Pushbullet
         /// Gets or sets the FileName
         /// </summary>
         [JsonProperty("file_name")]
-        public string FileName { get; set; }
+        public string FileName { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the filetype.
         /// </summary>
         [JsonProperty("file_type")]
-        public string FileType { get; set; }
+        public string FileType { get; set; } = string.Empty;
     }
 }
