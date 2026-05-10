@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Commit and Push Changes
-        if: ${{ env.PACKAGES_UPDATED == 'true' }}
+        if: ${{ env.PACKAGES_UPDATED == 'true' && github.ref_name == 'main' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -106,7 +106,7 @@ jobs:
 
           git add .
           git commit -m "Update NuGet packages" -m "${UPDATED_PACKAGES}"
-          git push
+          git push origin HEAD:main
 
       - name: Restore dependencies
         run: dotnet restore
