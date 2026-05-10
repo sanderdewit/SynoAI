@@ -8,7 +8,7 @@ namespace SynoAI.Notifiers.SynologyChat
             {
                 logger.LogInformation($"Processing {nameof(SynologyChat)} Config");
 
-                string url = section.GetValue<string>("Url");
+                string? url = section.GetValue<string>("Url");
 
                 SynologyChat webhook = new()
                 {

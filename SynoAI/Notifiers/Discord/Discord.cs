@@ -8,7 +8,7 @@ namespace SynoAI.Notifiers.Discord
         /// <summary>
         /// Discord Webhook Url.
         /// </summary>
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
         public override async Task SendAsync(Camera camera, Notification notification, ILogger logger)
         {
@@ -24,7 +24,7 @@ namespace SynoAI.Notifiers.Discord
             formData.Add(new StringContent($"{{\"content\":\"{message}\"}}"), "payload_json");
             formData.Add(new StreamContent(processedImage.GetReadonlyStream()), "file", processedImage.FileName);
 
-            HttpResponseMessage responseMessage = await Shared.HttpClient.PostAsync(Url, formData);
+            HttpResponseMessage responseMessage = await Shared.HttpClient.PostAsync(Url!, formData);
             if (responseMessage.IsSuccessStatusCode)
             {
                 logger.LogInformation("{CameraName}: Discord: Notification sent successfully", camera.Name);

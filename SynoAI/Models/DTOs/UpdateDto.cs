@@ -24,11 +24,16 @@ namespace SynoAI.Models.DTOs
         /// </summary>
         public bool HasChanged(Expression<Func<T, object>> expression)
         {
-            if (expression.Body is not MemberExpression body)
+            MemberExpression? body;
+            if (expression.Body is MemberExpression memberExpr)
+            {
+                body = memberExpr;
+            }
+            else
             {
                 body = ((UnaryExpression)expression.Body).Operand as MemberExpression;
             }
-            return HasChanged(body.Member.Name);
+            return HasChanged(body!.Member.Name);
         }
         /// <summary>
         /// Boolean to indicate something with changed with the property that changed

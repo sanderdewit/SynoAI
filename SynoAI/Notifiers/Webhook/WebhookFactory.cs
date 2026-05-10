@@ -8,11 +8,11 @@ namespace SynoAI.Notifiers.Webhook
             {
                 logger.LogInformation("Processing Webhook Config");
 
-                string url = section.GetValue<string>("Url");
+                string? url = section.GetValue<string>("Url");
                 AuthorizationMethod authentication = section.GetValue<AuthorizationMethod>("Authorization", AuthorizationMethod.None);
-                string username = section.GetValue<string>("Username", null);
-                string password = section.GetValue<string>("Password", null);
-                string token = section.GetValue<string>("Token", null);
+                string? username = section.GetValue<string?>("Username", null);
+                string? password = section.GetValue<string?>("Password", null);
+                string? token = section.GetValue<string?>("Token", null);
                 string imageField = section.GetValue<string>("ImageField", "image");
                 string method = section.GetValue<string>("Method", "POST");
                 bool sendImage = section.GetValue<bool>("SendImage", true);

@@ -13,23 +13,23 @@ namespace SynoAI.Notifiers.Email
         /// <summary>
         /// The email address to send the notification from.
         /// </summary>
-        public string Sender { get; set; }
+        public string? Sender { get; set; }
         /// <summary>
         /// The email address to send the notification to.
         /// </summary>
-        public string Destination { get; set; }
+        public string? Destination { get; set; }
         /// <summary>
         /// The username to autheticate on the smtp server.
         /// </summary>
-        public string Username { get; set; }
+        public string? Username { get; set; }
         /// <summary>
         /// The port of the smtp server.
         /// </summary>
-        public string Password { get; set; }
+        public string? Password { get; set; }
         /// <summary>
         /// The email provider host.
         /// </summary>
-        public string Host { get; set; }
+        public string? Host { get; set; }
         /// <summary>
         /// The port of the email provider.
         /// </summary>
@@ -56,11 +56,11 @@ namespace SynoAI.Notifiers.Email
                 try
                 {
                     // Create the email message
-                    string sender = string.IsNullOrWhiteSpace(Sender) ? Destination : Sender;
+                    string sender = string.IsNullOrWhiteSpace(Sender) ? (Destination ?? string.Empty) : Sender;
 
                     MimeMessage email = new();
                     email.From.Add(new MailboxAddress("SynoAI", sender));
-                    email.To.Add(MailboxAddress.Parse(Destination));
+                    email.To.Add(MailboxAddress.Parse(Destination ?? string.Empty));
                     email.Subject = $"SynoAI: Movement Detected ({camera.Name})";
 
                     BodyBuilder builder = new()
@@ -73,7 +73,7 @@ namespace SynoAI.Notifiers.Email
                     // Send email
                     using (SmtpClient smtp = new())
                     {
-                        smtp.Connect(Host, Port, SocketOptions);
+                        smtp.Connect(Host ?? string.Empty, Port, SocketOptions);
                         if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
                         {
                             smtp.Authenticate(Username, Password);

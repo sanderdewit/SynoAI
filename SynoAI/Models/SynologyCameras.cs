@@ -2,6 +2,6 @@
 {
     internal class SynologyCameras
     {
-        public IEnumerable<SynologyCamera> Cameras { get; set; }
+        public IEnumerable<SynologyCamera> Cameras { get; set; } = Enumerable.Empty<SynologyCamera>();
     }
 }
