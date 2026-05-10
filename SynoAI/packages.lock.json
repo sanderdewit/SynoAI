@@ -69,9 +69,9 @@
       },
       "Telegram.Bot": {
         "type": "Direct",
-        "requested": "[22.9.6.2, )",
-        "resolved": "22.9.6.2",
-        "contentHash": "ZRtW/Z/CZscGp+HvxaewpWLZDNg9Cc8R+niMuh7HlXLAio2kvatbSNQLYySCYffcS4eP8UBAdwepaXiKzHEcLQ==",
+        "requested": "[22.10.0, )",
+        "resolved": "22.10.0",
+        "contentHash": "gZLR0ZBLp4sw1Y//SiXwZERd7zrQT80ip6+hmvHnCci9GuKk5znnHwqA1aR/3rCNAVP0BGDEltBbbXb9li6g0w==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0",
           "System.Text.Json": "8.0.5"
