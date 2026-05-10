@@ -58,12 +58,12 @@ namespace SynoAI.Notifiers
 
         protected static string? GetImageUrl(Camera camera, Notification notification)
         {
-            if (Config.SynoAIUrL == null)
+            if (Config.SynoAIUrl == null)
             {
                 return null;
             }
 
-            UriBuilder builder = new(Config.SynoAIUrL);
+            UriBuilder builder = new(Config.SynoAIUrl);
             builder.Path += $"{camera.Name}/{notification.ProcessedImage.FileName}";
 
             return builder.Uri.ToString();
