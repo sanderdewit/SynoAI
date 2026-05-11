@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using SynoAI.Models;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 
 namespace SynoAI.Controllers
 {

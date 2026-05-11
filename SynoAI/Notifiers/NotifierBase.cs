@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+using System.Text.Json;
+using SynoAI.App;
 using SynoAI.Models;
 using System.Dynamic;
 
@@ -100,7 +101,7 @@ namespace SynoAI.Notifiers
                 jsonObject.imageUrl = imageUrl;
             }
 
-            return JsonConvert.SerializeObject(jsonObject);
+            return JsonSerializer.Serialize(jsonObject, Shared.JsonOptions);
         }
 
 
@@ -123,7 +124,7 @@ namespace SynoAI.Notifiers
         protected static async Task<T> GetResponse<T>(HttpResponseMessage message)
         {
             string content = await message.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(content)!;
+            return JsonSerializer.Deserialize<T>(content, Shared.JsonOptions)!;
         }
     }
 }

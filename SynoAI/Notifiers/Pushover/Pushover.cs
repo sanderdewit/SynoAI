@@ -62,15 +62,15 @@ namespace SynoAI.Notifiers.Pushover
 
             MultipartFormDataContent form = new()
             {
-                { new StringContent(device), "\"device\"" },
-                { new StringContent(message), "\"message\"" },
-                { new StringContent(((int)Priority).ToString()), "\"priority\"" },
-                { new StringContent(Retry.ToString()), "\"retry\"" },
-                { new StringContent(Expire.ToString()), "\"expire\"" },
-                { new StringContent(Sound ?? String.Empty), "\"sound\"" },
-                { new StringContent(ApiKey), "\"token\"" },
-                { new StringContent(UserKey), "\"user\"" },
-                { new StringContent(title), "\"title\"" }
+                { new StringContent(device), "device" },
+                { new StringContent(message), "message" },
+                { new StringContent(((int)Priority).ToString()), "priority" },
+                { new StringContent(Retry.ToString()), "retry" },
+                { new StringContent(Expire.ToString()), "expire" },
+                { new StringContent(Sound ?? String.Empty), "sound" },
+                { new StringContent(ApiKey), "token" },
+                { new StringContent(UserKey), "user" },
+                { new StringContent(title), "title" }
             };
 
             // Send the message

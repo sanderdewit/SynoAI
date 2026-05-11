@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+using System.Text.Json;
+using SynoAI.App;
 using SynoAI.Models;
 
 namespace SynoAI.Notifiers.SynologyChat
@@ -34,7 +35,7 @@ namespace SynoAI.Notifiers.SynologyChat
                 file_url = new Uri(new Uri(Config.Url), new Uri($"Image/{camera.Name}/{notification.ProcessedImage.FileName}", UriKind.Relative))
             };
 
-            string requestJson = JsonConvert.SerializeObject(request);
+            string requestJson = JsonSerializer.Serialize(request, Shared.JsonOptions);
             Dictionary<string, string> payload = new()
                 {
                     { "payload", requestJson },
@@ -52,7 +53,7 @@ namespace SynoAI.Notifiers.SynologyChat
             {
                 // Check that it's actually successful, because Synology like to make things awkward
                 string responseString = await response.Content.ReadAsStringAsync();
-                SynologyChatResponse actualResponse = JsonConvert.DeserializeObject<SynologyChatResponse>(responseString)!;
+                SynologyChatResponse actualResponse = JsonSerializer.Deserialize<SynologyChatResponse>(responseString, Shared.JsonOptions)!;
                 if (actualResponse.Success)
                 {
                     logger.LogInformation("{cameraName}: SynologyChat: Success.",

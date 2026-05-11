@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace SynoAI.Models
 {
@@ -14,12 +14,12 @@ namespace SynoAI.Models
         /// <summary>
         /// Gets or sets the Name.
         /// </summary>
-        [JsonProperty("Name")]
+        [JsonPropertyName("Name")]
         public string NameOld { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the NameOld.
         /// </summary>
-        [JsonProperty("newName")]
+        [JsonPropertyName("newName")]
         public string NameNew { get; set; } = string.Empty;
         /// <summary>
         /// Gets or sets the NameNew.

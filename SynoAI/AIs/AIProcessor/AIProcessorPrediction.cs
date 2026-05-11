@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SynoAI.AIs.AIProcessor
 {
@@ -20,25 +20,25 @@ namespace SynoAI.AIs.AIProcessor
         /// <summary>
         /// Gets or sets the minimum X-coordinate of the bounding box for the prediction.
         /// </summary>
-        [JsonProperty("x_min")]
+        [JsonPropertyName("x_min")]
         public int MinX { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum Y-coordinate of the bounding box for the prediction.
         /// </summary>
-        [JsonProperty("y_min")]
+        [JsonPropertyName("y_min")]
         public int MinY { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum X-coordinate of the bounding box for the prediction.
         /// </summary>
-        [JsonProperty("x_max")]
+        [JsonPropertyName("x_max")]
         public int MaxX { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum Y-coordinate of the bounding box for the prediction.
         /// </summary>
-        [JsonProperty("y_max")]
+        [JsonPropertyName("y_max")]
         public int MaxY { get; set; }
     }
 }

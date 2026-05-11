@@ -24,12 +24,6 @@
         "resolved": "5.1.0.1559",
         "contentHash": "9mkk0H+76CToIzp9ru5Uj5BuC3P5hQdkhvXM+CLmmTDdZWqajjICCHuUMbDd1yVBt9BWL77Rvzt0A+/PA4WMCA=="
       },
-      "Newtonsoft.Json": {
-        "type": "Direct",
-        "requested": "[13.0.4, )",
-        "resolved": "13.0.4",
-        "contentHash": "pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A=="
-      },
       "SkiaSharp": {
         "type": "Direct",
         "requested": "[3.119.2, )",
@@ -56,15 +50,6 @@
           "Swashbuckle.AspNetCore.Swagger": "10.1.7",
           "Swashbuckle.AspNetCore.SwaggerGen": "10.1.7",
           "Swashbuckle.AspNetCore.SwaggerUI": "10.1.7"
-        }
-      },
-      "System.Drawing.Common": {
-        "type": "Direct",
-        "requested": "[10.0.7, )",
-        "resolved": "10.0.7",
-        "contentHash": "t0dLoUJOFMMyHqwpDuTKVlKVry92yUhf7qwihVT2MUrg3y/ZOHKpij5nb+jb20UT3vc7UlQWQlNmV9NQ5c7aSA==",
-        "dependencies": {
-          "Microsoft.Win32.SystemEvents": "10.0.7"
         }
       },
       "Telegram.Bot": {
@@ -141,11 +126,6 @@
         "dependencies": {
           "System.Text.Json": "8.0.5"
         }
-      },
-      "Microsoft.Win32.SystemEvents": {
-        "type": "Transitive",
-        "resolved": "10.0.7",
-        "contentHash": "yRy88RjP9RlFxiaxwkGSh5e7lhSRCUaSwYW323ssK85XTm13b3y65Yp8HuURXNnxGQGo9L4Bz19aQAbrfTyJqA=="
       },
       "MimeKit": {
         "type": "Transitive",
