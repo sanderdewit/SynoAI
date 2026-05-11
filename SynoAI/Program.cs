@@ -35,6 +35,7 @@ builder.Services.AddHttpClient("Synology").ConfigurePrimaryHttpMessageHandler(()
 // Singleton so SynoAIStartupService (IHostedService) can inject it without scope issues
 builder.Services.AddSingleton<ISynologyService, SynologyService>();
 builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<ICameraProcessingService, CameraProcessingService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen(c =>
