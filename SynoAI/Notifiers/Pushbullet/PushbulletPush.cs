@@ -1,37 +1,37 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace SynoAI.Notifiers.Pushbullet
 {
     internal class PushbulletPush
     {
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; } = string.Empty;
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public string Body { get; set; } = string.Empty;
-        [JsonProperty("url")]
+        [JsonPropertyName("url")]
         public string? Url { get; set; }
-        [JsonProperty("file_name")]
+        [JsonPropertyName("file_name")]
         public string? FileName { get; set; }
-        [JsonProperty("file_type")]
+        [JsonPropertyName("file_type")]
         public string? FileType { get; set; }
-        [JsonProperty("file_url")]
+        [JsonPropertyName("file_url")]
         public string? FileUrl { get; set; }
-        [JsonProperty("source_device_iden")]
+        [JsonPropertyName("source_device_iden")]
         public string? SourceDeviceIdentifier { get; set; }
-        [JsonProperty("device_iden")]
+        [JsonPropertyName("device_iden")]
         public string? DeviceIdentifier { get; set; }
-        [JsonProperty("client_iden")]
+        [JsonPropertyName("client_iden")]
         public string? ClientIdentifier { get; set; }
-        [JsonProperty("channel_tag")]
+        [JsonPropertyName("channel_tag")]
         public string? ChannelTag { get; set; }
-        [JsonProperty("email")]
+        [JsonPropertyName("email")]
         public string? Email { get; set; }
-        [JsonProperty("guid")]
+        [JsonPropertyName("guid")]
         public string? Guid { get; set; }
 
-        [JsonProperty("image_url")]
+        [JsonPropertyName("image_url")]
         public string? ImageUrl { get; set; }
     }
 }

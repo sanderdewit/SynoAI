@@ -11,7 +11,7 @@ namespace SynoAI.Models
         /// <summary>
         /// The list of valid predictions.
         /// </summary>
-        public required IEnumerable<AIPrediction> ValidPredictions { get; set; }
+        public required List<AIPrediction> ValidPredictions { get; set; }
 
         /// <summary>
         /// The list of types that were found.
@@ -33,7 +33,7 @@ namespace SynoAI.Models
             if (Config.AlternativeLabelling && Config.DrawMode == DrawMode.Matches)
             {
                 List<String> labels = new();
-                if (ValidPredictions.Count() == 1)
+                if (ValidPredictions.Count == 1)
                 {
                     // If there is only a single object, then don't add a correlating number and instead just
                     // write out the label.

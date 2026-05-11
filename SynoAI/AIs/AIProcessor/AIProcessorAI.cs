@@ -1,12 +1,20 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 using SynoAI.App;
 using SynoAI.Models;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 
 namespace SynoAI.AIs.AIProcessor
 {
     internal class AIProcessorAI : AI
     {
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        public AIProcessorAI(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
+        }
+
         public override AIType AIType => Config.AI;
         public override async Task<IEnumerable<AIPrediction>?> Process(ILogger logger, Camera camera, byte[] image)
         {
@@ -14,9 +22,12 @@ namespace SynoAI.AIs.AIProcessor
 
             decimal minConfidence = camera.Threshold / 100m;
 
+            var imageContent = new ByteArrayContent(image);
+            imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
             MultipartFormDataContent multipartContent = new()
             {
-                { new StreamContent(new MemoryStream(image)), "image", "image" },
+                { imageContent, "image", "image" },
                 { new StringContent(minConfidence.ToString()), "min_confidence" } // From face detection example - using JSON with MinConfidence didn't always work
             };
 
@@ -32,13 +43,15 @@ namespace SynoAI.AIs.AIProcessor
 
             try
             {
-                HttpResponseMessage response = await Shared.HttpClient.PostAsync(uri, multipartContent);
+                HttpClient httpClient = _httpClientFactory.CreateClient("AI");
+                HttpResponseMessage response = await httpClient.PostAsync(uri, multipartContent);
                 if (response.IsSuccessStatusCode)
                 {
                     AIProcessorResponse deepStackResponse = await GetResponse(logger, camera, response, this.AIType);
                     if (deepStackResponse.Success)
                     {
-                        IEnumerable<AIPrediction> predictions = deepStackResponse.Predictions.Where(x => x.Confidence >= minConfidence).Select(x => new AIPrediction()
+                        // The AI already filtered by min_confidence server-side; map results directly.
+                        IEnumerable<AIPrediction> predictions = deepStackResponse.Predictions.Select(x => new AIPrediction()
                         {
                             Confidence = x.Confidence * 100,
                             Label = x.Label,
@@ -113,7 +126,7 @@ namespace SynoAI.AIs.AIProcessor
                 aiTypeStr,
                 content);
 
-            return JsonConvert.DeserializeObject<AIProcessorResponse>(content)!;
+            return JsonSerializer.Deserialize<AIProcessorResponse>(content, Shared.JsonOptions)!;
         }
     }
 }

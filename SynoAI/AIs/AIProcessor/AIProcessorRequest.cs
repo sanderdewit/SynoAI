@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SynoAI.AIs.AIProcessor
 {
@@ -10,7 +10,7 @@ namespace SynoAI.AIs.AIProcessor
         /// <summary>
         /// Gets or sets the minimum confidence for the request.
         /// </summary>
-        [JsonProperty("min_confidence")]
+        [JsonPropertyName("min_confidence")]
         public decimal MinConfidence { get; set; }
     }
 }

@@ -8,7 +8,6 @@ using SynoAI.Notifiers;
 using SynoAI.Services;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Drawing;
 using System.Text;
 
 namespace SynoAI.Controllers
@@ -43,6 +42,9 @@ namespace SynoAI.Controllers
         {
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest("Camera id is required.");
+
+            if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                return BadRequest("Camera id contains invalid characters.");
 
             if (_enabledCameras.TryGetValue(id, out bool enabled) && !enabled)
             {
@@ -100,7 +102,7 @@ namespace SynoAI.Controllers
                     // Rotate if required; keep the SKBitmap to avoid re-decoding later
                     (byte[] processedBytes, SKBitmap? processedBitmap) = PreProcessSnapshot(camera, snapshot);
 
-                    List<AIPrediction> predictions = (await GetAIPredications(camera, processedBytes))?.ToList() ?? new();
+                    List<AIPrediction> predictions = await GetAIPredications(camera, processedBytes) ?? new();
 
                     _logger.LogInformation("{Id}: Snapshot {Count} of {Max} contains {PredCount} objects at {Ms}ms.", id, snapshotCount, Config.MaxSnapshots, predictions.Count, overallStopwatch.ElapsedMilliseconds);
 
@@ -120,7 +122,7 @@ namespace SynoAI.Controllers
                         {
                             _logger.LogDebug("{Id}: Ignored '{Label}' as it's under the minimum size ({MinX}x{MinY}) at {Ms}ms.", id, prediction.Label, minSizeX, minSizeY, overallStopwatch.ElapsedMilliseconds);
                         }
-                        else if (prediction.SizeX > maxSizeX || prediction.SizeY > maxSizeY)
+                        else if ((maxSizeX < int.MaxValue && prediction.SizeX > maxSizeX) || (maxSizeY < int.MaxValue && prediction.SizeY > maxSizeY))
                         {
                             _logger.LogDebug("{Id}: Ignored '{Label}' as it exceeds the maximum size ({MaxX}x{MaxY}) at {Ms}ms.", id, prediction.Label, maxSizeX, maxSizeY, overallStopwatch.ElapsedMilliseconds);
                         }
@@ -186,8 +188,16 @@ namespace SynoAI.Controllers
         /// </summary>
         [HttpPost]
         [Route("{id}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
         public IActionResult Post(string id, [FromBody] CameraOptionsDto options)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest("Camera id is required.");
+
+            if (options == null)
+                return BadRequest("Request body is required.");
+
             if (options.HasChanged(x => x.Enabled))
                 _enabledCameras.AddOrUpdate(id, options.Enabled, (_, _) => options.Enabled);
 
@@ -199,18 +209,20 @@ namespace SynoAI.Controllers
             if (camera.Exclusions == null || camera.Exclusions.Count == 0)
                 return true;
 
-            Rectangle boundary = new(prediction.MinX, prediction.MinY, prediction.SizeX, prediction.SizeY);
+            int predMinX = prediction.MinX;
+            int predMinY = prediction.MinY;
+            int predMaxX = prediction.MaxX;
+            int predMaxY = prediction.MaxY;
             foreach (Zone exclusion in camera.Exclusions)
             {
                 int startX = Math.Min(exclusion.Start.X, exclusion.End.X);
                 int startY = Math.Min(exclusion.Start.Y, exclusion.End.Y);
                 int endX = Math.Max(exclusion.Start.X, exclusion.End.X);
                 int endY = Math.Max(exclusion.Start.Y, exclusion.End.Y);
-                Rectangle exclusionZone = new(startX, startY, endX - startX, endY - startY);
 
                 bool exclude = exclusion.Mode == OverlapMode.Contains
-                    ? exclusionZone.Contains(boundary)
-                    : exclusionZone.IntersectsWith(boundary);
+                    ? startX <= predMinX && startY <= predMinY && endX >= predMaxX && endY >= predMaxY
+                    : predMinX < endX && predMaxX > startX && predMinY < endY && predMaxY > startY;
 
                 if (exclude)
                 {
@@ -312,14 +324,16 @@ namespace SynoAI.Controllers
             return imageBytes;
         }
 
-        private async Task<IEnumerable<AIPrediction>?> GetAIPredications(Camera camera, byte[] imageBytes)
+        private async Task<List<AIPrediction>?> GetAIPredications(Camera camera, byte[] imageBytes)
         {
-            IEnumerable<AIPrediction>? predictions = await _aiService.ProcessAsync(camera, imageBytes);
-            if (predictions == null)
+            IEnumerable<AIPrediction>? rawPredictions = await _aiService.ProcessAsync(camera, imageBytes);
+            if (rawPredictions == null)
             {
                 _logger.LogError("{CameraName}: Failed to get predictions.", camera.Name);
                 return null;
             }
+
+            List<AIPrediction> predictions = rawPredictions.ToList();
 
             foreach (AIPrediction prediction in predictions)
             {

@@ -82,11 +82,15 @@ namespace SynoAI
         /// </summary>
         public static int TextOffsetY { get; private set; }
         /// <summary>
-        /// True will only place a reference number on each label image, later detailing object type and confidence percentage on the notification text
+        /// When <see langword="true"/> and <see cref="DrawMode"/> is set to <see cref="DrawMode.Matches"/>,
+        /// labels drawn on the image show a sequential reference number (1, 2, 3…) instead of the class name
+        /// and confidence percentage. The notification message then lists each object type and its confidence.
+        /// The saved file name also uses a different date format when this flag is enabled.
         /// </summary>
         public static bool AlternativeLabelling { get; private set; }
         /// <summary>
-        /// True will place each image label below the boundary box.
+        /// When <see langword="true"/>, the label text for each detected object is placed below the detection
+        /// bounding box rather than inside or above it.
         /// </summary>
         public static bool LabelBelowBox { get; private set; }
         /// <summary>

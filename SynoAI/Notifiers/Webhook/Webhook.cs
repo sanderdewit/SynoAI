@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+using System.Text.Json;
+using SynoAI.App;
 using SynoAI.Models;
 using System.Net.Http.Headers;
 using System.Text;
@@ -70,21 +71,21 @@ namespace SynoAI.Notifiers.Webhook
             if (SendImage)
             {
                 // If we're sending the image, then we need to send the data as multipart/form-data.
-                string typesJson = JsonConvert.SerializeObject(foundTypes);
-                string validPredictionsJson = JsonConvert.SerializeObject(notification.ValidPredictions);
+                string typesJson = JsonSerializer.Serialize(foundTypes, Shared.JsonOptions);
+                string validPredictionsJson = JsonSerializer.Serialize(notification.ValidPredictions, Shared.JsonOptions);
 
                 MultipartFormDataContent form = new()
                     {
-                        { new StringContent(camera.Name), "\"camera\"" },
-                        { new StringContent(typesJson), "\"foundTypes\"" },
-                        { new StringContent(validPredictionsJson), "\"predictions\"" },
-                        { new StringContent(message), "\"message\"" }
+                        { new StringContent(camera.Name), "camera" },
+                        { new StringContent(typesJson), "foundTypes" },
+                        { new StringContent(validPredictionsJson), "predictions" },
+                        { new StringContent(message), "message" }
                     };
 
                 string? imageUrl = GetImageUrl(camera, notification);
                 if (imageUrl != null)
                 {
-                    form.Add(new StringContent(imageUrl), "\"imageUrl\"");
+                    form.Add(new StringContent(imageUrl), "imageUrl");
                 }
 
                 switch (Method)

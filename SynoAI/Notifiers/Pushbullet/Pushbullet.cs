@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 using SynoAI.App;
 using SynoAI.Models;
 
@@ -32,7 +32,7 @@ namespace SynoAI.Notifiers.Pushbullet
             ProcessedImage processedImage = notification.ProcessedImage;
 
             string fileName = processedImage.FileName;
-            string requestJson = JsonConvert.SerializeObject(new PushbulletUploadRequest()
+            string requestJson = JsonSerializer.Serialize(new PushbulletUploadRequest()
             {
                 FileName = fileName,
                 FileType = "image/jpeg"
@@ -72,7 +72,7 @@ namespace SynoAI.Notifiers.Pushbullet
                 }
 
                 // The file was uploaded successfully, so we can now send the message
-                string pushJson = JsonConvert.SerializeObject(new PushbulletPush()
+                string pushJson = JsonSerializer.Serialize(new PushbulletPush()
                 {
                     Type = uploadSuccess ? "file" : "note",
                     Title = $"{camera.Name}: Movement Detected",

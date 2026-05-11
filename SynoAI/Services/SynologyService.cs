@@ -1,26 +1,32 @@
-using Newtonsoft.Json;
+using System.Text.Json;
+using SynoAI.App;
 using SynoAI.Models;
-using System.Web;
 
 namespace SynoAI.Services
 {
     internal class SynologyService : ISynologyService
     {
         // Synology session cookie value; refreshed automatically on expiry (errors 105/106).
-        private static string? _sessionCookieValue;
+        private string? _sessionCookieValue;
 
-        private static Dictionary<string, int> Cameras { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, int> Cameras { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        // Discovered API versions (clamped to configured maximums).
+        private int _authVersion;
+        private int _cameraVersion;
+
+        // Semaphore to prevent concurrent re-authentication races.
+        private readonly SemaphoreSlim _reAuthSemaphore = new(1, 1);
 
         private const string API_LOGIN = "SYNO.API.Auth";
         private const string API_CAMERA = "SYNO.SurveillanceStation.Camera";
 
         private const string URI_INFO = "webapi/query.cgi?api=SYNO.API.Info&version=1&method=query";
-        private const string URI_LOGIN = "webapi/{0}?api=SYNO.API.Auth&method=Login&version={1}&account={2}&passwd={3}&session=SurveillanceStation";
         private const string URI_CAMERA_INFO = "webapi/{0}?api=SYNO.SurveillanceStation.Camera&method=List&version={1}";
         private const string URI_CAMERA_SNAPSHOT = "webapi/{0}?version={1}&id={2}&api=SYNO.SurveillanceStation.Camera&method=GetSnapshot";
 
-        private static string? LoginPath { get; set; }
-        private static string? CameraPath { get; set; }
+        private string? LoginPath { get; set; }
+        private string? CameraPath { get; set; }
 
         private readonly IHostApplicationLifetime _applicationLifetime;
         private readonly ILogger<SynologyService> _logger;
@@ -40,7 +46,7 @@ namespace SynoAI.Services
             return client;
         }
 
-        private static HttpRequestMessage BuildRequest(HttpMethod method, string uri)
+        private HttpRequestMessage BuildRequest(HttpMethod method, string uri)
         {
             HttpRequestMessage request = new(method, uri);
             if (_sessionCookieValue != null)
@@ -63,7 +69,10 @@ namespace SynoAI.Services
                     {
                         _logger.LogDebug("API: Found path '{Path}' for {Api}", loginInfo.Path, API_LOGIN);
                         if (loginInfo.MaxVersion < Config.ApiVersionAuth)
+                        {
                             _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, loginInfo.MaxVersion, Config.ApiVersionAuth);
+                            return false;
+                        }
                     }
                     else
                     {
@@ -75,7 +84,10 @@ namespace SynoAI.Services
                     {
                         _logger.LogDebug("API: Found path '{Path}' for {Api}", cameraInfo.Path, API_CAMERA);
                         if (cameraInfo.MaxVersion < Config.ApiVersionCamera)
+                        {
                             _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, cameraInfo.MaxVersion, Config.ApiVersionCamera);
+                            return false;
+                        }
                     }
                     else
                     {
@@ -85,6 +97,10 @@ namespace SynoAI.Services
 
                     LoginPath = loginInfo.Path;
                     CameraPath = cameraInfo.Path;
+
+                    // Use the lesser of what the NAS supports and what we're configured to use.
+                    _authVersion = Math.Min(loginInfo.MaxVersion, Config.ApiVersionAuth);
+                    _cameraVersion = Math.Min(cameraInfo.MaxVersion, Config.ApiVersionCamera);
 
                     _logger.LogInformation("API: Successfully mapped all end points");
                     return true;
@@ -105,10 +121,19 @@ namespace SynoAI.Services
         {
             _logger.LogInformation("Login: Authenticating");
 
-            string loginUri = string.Format(URI_LOGIN, LoginPath, Config.ApiVersionAuth, Config.Username, SanitisePassword(Config.Password));
+            string loginUrl = $"webapi/{LoginPath}";
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("api", "SYNO.API.Auth"),
+                new KeyValuePair<string, string>("method", "Login"),
+                new KeyValuePair<string, string>("version", _authVersion.ToString()),
+                new KeyValuePair<string, string>("account", Config.Username),
+                new KeyValuePair<string, string>("passwd", Config.Password),
+                new KeyValuePair<string, string>("session", "SurveillanceStation"),
+            });
 
             HttpClient client = GetSynologyClient();
-            HttpResponseMessage result = await client.GetAsync(loginUri);
+            HttpResponseMessage result = await client.PostAsync(loginUrl, formContent);
             if (result.IsSuccessStatusCode)
             {
                 SynologyResponse<SynologyLogin> response = await GetResponse<SynologyLogin>(result);
@@ -143,17 +168,12 @@ namespace SynoAI.Services
             return null;
         }
 
-        private static string SanitisePassword(string original)
-        {
-            return HttpUtility.UrlEncode(original);
-        }
-
         private async Task<IEnumerable<SynologyCamera>?> GetCamerasAsync()
         {
             _logger.LogInformation("GetCameras: Fetching Cameras");
 
             HttpClient client = GetSynologyClient();
-            string cameraInfoUri = string.Format(URI_CAMERA_INFO, CameraPath, Config.ApiVersionCamera);
+            string cameraInfoUri = string.Format(URI_CAMERA_INFO, CameraPath, _cameraVersion);
             using HttpRequestMessage request = BuildRequest(HttpMethod.Get, cameraInfoUri);
             HttpResponseMessage result = await client.SendAsync(request);
 
@@ -186,7 +206,7 @@ namespace SynoAI.Services
 
             _logger.LogDebug("{CameraName}: Found with Synology ID '{Id}'.", cameraName, id);
 
-            string resource = string.Format(URI_CAMERA_SNAPSHOT + $"&profileType={(int)Config.Quality}", CameraPath, Config.ApiVersionCamera, id);
+            string resource = string.Format(URI_CAMERA_SNAPSHOT + $"&profileType={(int)Config.Quality}", CameraPath, _cameraVersion, id);
             _logger.LogDebug("{CameraName}: Taking snapshot from '{Resource}'.", cameraName, resource);
             _logger.LogInformation("{CameraName}: Taking snapshot", cameraName);
 
@@ -206,7 +226,21 @@ namespace SynoAI.Services
             if (!isRetry && IsSessionExpiredError(errorResponse))
             {
                 _logger.LogWarning("{CameraName}: Session expired (code {Code}), re-authenticating...", cameraName, errorResponse.Error?.Code);
-                _sessionCookieValue = await LoginAsync();
+
+                await _reAuthSemaphore.WaitAsync();
+                try
+                {
+                    // Re-check: another thread may have already refreshed the session.
+                    if (IsSessionExpiredError(errorResponse))
+                    {
+                        _sessionCookieValue = await LoginAsync();
+                    }
+                }
+                finally
+                {
+                    _reAuthSemaphore.Release();
+                }
+
                 if (_sessionCookieValue != null)
                     return await TakeSnapshotInternalAsync(cameraName, isRetry: true);
             }
@@ -231,13 +265,13 @@ namespace SynoAI.Services
         private static async Task<SynologyResponse<T>> GetResponse<T>(HttpResponseMessage message)
         {
             string content = await message.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<SynologyResponse<T>>(content)!;
+            return JsonSerializer.Deserialize<SynologyResponse<T>>(content, Shared.JsonOptions)!;
         }
 
         private static async Task<SynologyResponse> GetErrorResponse(HttpResponseMessage message)
         {
             string content = await message.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<SynologyResponse>(content)!;
+            return JsonSerializer.Deserialize<SynologyResponse>(content, Shared.JsonOptions)!;
         }
 
         public async Task InitialiseAsync()

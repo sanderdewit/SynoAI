@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace SynoAI.Notifiers.SynologyChat
 {
     internal class SynologyChatErrorResponse
     {
-        [JsonProperty("code")]
+        [JsonPropertyName("code")]
         public string Code { get; set; } = string.Empty;
-        [JsonProperty("errors")]
+        [JsonPropertyName("errors")]
         public SynologyChatErrorReasonResponse? Errors { get; set; }
     }
 }
