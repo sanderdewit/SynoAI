@@ -4,9 +4,9 @@
     "net10.0": {
       "coverlet.collector": {
         "type": "Direct",
-        "requested": "[10.0.0, )",
-        "resolved": "10.0.0",
-        "contentHash": "WFejCcOUR6k8UYyDnnR6Gk+obFYMsWrZuNqPJnsVFGVhpPSN0y20D4qbdKJnXinYGx9PQ397Hf9TnU1NBST8vA=="
+        "requested": "[10.0.1, )",
+        "resolved": "10.0.1",
+        "contentHash": "27jXSV/0DbVqF5jDrAxuQFZ9oaz6gmG03p8ttxAFk+X0M4woFYj7MoWDLCna5EGLb0CE6OE7X6ZH3Wt5smTtaA=="
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
@@ -232,8 +232,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.10.0",
-        "contentHash": "gZLR0ZBLp4sw1Y//SiXwZERd7zrQT80ip6+hmvHnCci9GuKk5znnHwqA1aR/3rCNAVP0BGDEltBbbXb9li6g0w==",
+        "resolved": "22.10.0.1",
+        "contentHash": "/1Wn3WOkf1U0/dH+DOLcD/ZtFKtgIR5pO5N1TiSf132U3dTxfJlJMr2J+L60ooDfT8tu0deQNH/0WnHfkyUKyg==",
         "dependencies": {
           "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0"
         }
@@ -287,7 +287,7 @@
           "SkiaSharp": "[3.119.2, )",
           "SkiaSharp.NativeAssets.Linux": "[3.119.2, )",
           "Swashbuckle.AspNetCore": "[10.1.7, )",
-          "Telegram.Bot": "[22.10.0, )"
+          "Telegram.Bot": "[22.10.0.1, )"
         }
       }
     }
