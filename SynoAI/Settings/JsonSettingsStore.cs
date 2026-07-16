@@ -33,18 +33,6 @@ namespace SynoAI.Settings
             FilePath = filePath;
         }
 
-        /// <summary>
-        /// Resolves the settings file path from configuration (<c>SynoAI:SettingsPath</c>) or defaults to
-        /// <see cref="FileName"/> in the content root.
-        /// </summary>
-        public static string ResolvePath(IConfiguration configuration, string contentRootPath)
-        {
-            string? configured = configuration["SynoAI:SettingsPath"];
-            return string.IsNullOrWhiteSpace(configured)
-                ? Path.Combine(contentRootPath, FileName)
-                : configured;
-        }
-
         /// <inheritdoc />
         public string FilePath { get; }
 

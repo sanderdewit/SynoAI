@@ -8,16 +8,35 @@ using SynoAI.Settings;
 using System.Net.Security;
 using System.Reflection;
 
+// Resolve the writable settings file path and make sure it is valid JSON *before* building the host.
+// This must happen before CreateBuilder because .NET's default configuration eagerly loads both
+// appsettings.json and "{ApplicationName}.settings.json" — the latter collides with this file on
+// case-insensitive file systems — and an empty file (e.g. a pre-created Docker bind mount) crashes the
+// JSON provider ("optional" only tolerates a *missing* file, not an empty one). Configuration isn't built
+// yet, so the path override is read from its environment-variable form (SynoAI__SettingsPath).
+string? configuredSettingsPath = Environment.GetEnvironmentVariable("SynoAI__SettingsPath");
+string settingsPath = Path.GetFullPath(string.IsNullOrWhiteSpace(configuredSettingsPath)
+    ? Path.Combine(Directory.GetCurrentDirectory(), JsonSettingsStore.FileName)
+    : configuredSettingsPath);
+string settingsDirectory = Path.GetDirectoryName(settingsPath) ?? Directory.GetCurrentDirectory();
+Directory.CreateDirectory(settingsDirectory);
+try
+{
+    if (!File.Exists(settingsPath) || string.IsNullOrWhiteSpace(File.ReadAllText(settingsPath)))
+        File.WriteAllText(settingsPath, "{}");
+}
+catch (Exception ex)
+{
+    // Non-fatal (e.g. a read-only mount): fall back to only using the file if it already has content.
+    Console.Error.WriteLine($"SynoAI: could not initialise settings file '{settingsPath}': {ex.Message}");
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Writable, reloadable settings layer, laid on top of appsettings.json. ISettingsStore writes to this
-// file; reloadOnChange means saved changes flow through to IOptionsMonitor<AppSettings> consumers live.
-// The path is configurable via "SynoAI:SettingsPath" (default: synoai.settings.json in the content root),
-// so it can point at a mounted data directory.
-string settingsPath = JsonSettingsStore.ResolvePath(builder.Configuration, builder.Environment.ContentRootPath);
-string settingsDirectory = Path.GetDirectoryName(settingsPath) ?? builder.Environment.ContentRootPath;
-Directory.CreateDirectory(settingsDirectory);
-builder.Configuration.AddJsonFile(new PhysicalFileProvider(settingsDirectory), Path.GetFileName(settingsPath), optional: true, reloadOnChange: true);
+// Writable, reloadable settings layer, laid on top of appsettings.json. ISettingsStore writes to
+// settingsPath; reloadOnChange means saved changes flow through to IOptionsMonitor<AppSettings> live.
+if (File.Exists(settingsPath) && !string.IsNullOrWhiteSpace(File.ReadAllText(settingsPath)))
+    builder.Configuration.AddJsonFile(new PhysicalFileProvider(settingsDirectory), Path.GetFileName(settingsPath), optional: true, reloadOnChange: true);
 
 // Strongly-typed settings, bound from configuration and validated at startup. Consumed via
 // IOptionsMonitor<AppSettings> (for live reload). Replaces the former static Config class.
