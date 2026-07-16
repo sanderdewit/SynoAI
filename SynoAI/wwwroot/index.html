@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SynoAI — Configuration</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+        <h1>SynoAI Configuration</h1>
+        <div class="api-key">
+            <input type="password" id="apiKey" placeholder="Admin API key" autocomplete="off" />
+            <button id="connectBtn">Connect</button>
+            <span id="connStatus" class="status"></span>
+        </div>
+    </header>
+
+    <main id="app" hidden>
+        <section class="panel">
+            <h2>Global settings</h2>
+            <p class="hint">Defaults applied to every camera unless overridden. Leave the password blank to keep the current one.</p>
+            <div id="settingsForm" class="grid"></div>
+            <div class="actions">
+                <button id="saveSettingsBtn" class="primary">Save settings</button>
+                <span id="settingsStatus" class="status"></span>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Cameras</h2>
+            <div class="camera-toolbar">
+                <select id="cameraSelect"></select>
+                <button id="newCameraBtn">+ New</button>
+                <button id="deleteCameraBtn" class="danger">Delete</button>
+            </div>
+
+            <div id="cameraEditor" hidden>
+                <div class="editor-layout">
+                    <div class="canvas-column">
+                        <div class="canvas-toolbar">
+                            <button id="loadSnapshotBtn">Load snapshot</button>
+                            <div class="tools">
+                                <label><input type="radio" name="tool" value="exclude" checked /> Exclusion zone</label>
+                                <label><input type="radio" name="tool" value="min" /> Min size</label>
+                                <label><input type="radio" name="tool" value="max" /> Max size</label>
+                            </div>
+                            <label class="mode-label">Zone mode:
+                                <select id="zoneMode">
+                                    <option value="Intersect">Intersect</option>
+                                    <option value="Contains">Contains</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="canvas-wrap">
+                            <canvas id="canvas" width="1280" height="720"></canvas>
+                        </div>
+                        <p class="hint" id="canvasHint">Load a snapshot, then drag on the image to draw. Exclusion zones ignore detections; Min/Max size set the object size limits.</p>
+                    </div>
+
+                    <div class="fields-column">
+                        <div id="cameraForm" class="grid"></div>
+
+                        <h3>Exclusion zones</h3>
+                        <ul id="zoneList" class="zone-list"></ul>
+
+                        <div class="actions">
+                            <button id="saveCameraBtn" class="primary">Save camera</button>
+                            <span id="cameraStatus" class="status"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

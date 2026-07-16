@@ -1,4 +1,5 @@
 ﻿using SynoAI.Extensions;
+using SynoAI.Settings;
 
 namespace SynoAI.Models
 {
@@ -12,6 +13,10 @@ namespace SynoAI.Models
         /// The list of valid predictions.
         /// </summary>
         public required List<AIPrediction> ValidPredictions { get; set; }
+        /// <summary>
+        /// The application settings, used to determine how labels are generated.
+        /// </summary>
+        public required AppSettings Settings { get; set; }
 
         /// <summary>
         /// The list of types that were found.
@@ -30,7 +35,7 @@ namespace SynoAI.Models
         /// <returns>A list of labels.</returns>
         private List<string> GetLabels()
         {
-            if (Config.AlternativeLabelling && Config.DrawMode == DrawMode.Matches)
+            if (Settings.AlternativeLabelling && Settings.DrawMode == DrawMode.Matches)
             {
                 List<String> labels = new();
                 if (ValidPredictions.Count == 1)

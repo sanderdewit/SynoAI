@@ -1,12 +1,14 @@
 using System.Text.Json;
 using SynoAI.App;
 using SynoAI.Models;
+using SynoAI.Settings;
 using System.Dynamic;
 
 namespace SynoAI.Notifiers
 {
     internal abstract class NotifierBase : INotifier
     {
+        public AppSettings Settings { get; set; } = new();
         public IEnumerable<string>? Cameras { get; set; }
         public IEnumerable<string>? Types { get; set; }
 
@@ -17,11 +19,11 @@ namespace SynoAI.Notifiers
 
         public virtual Task CleanupAsync(ILogger logger) { return Task.CompletedTask; }
 
-        protected static string GetMessage(Camera camera, IEnumerable<string> foundTypes, List<AIPrediction> predictions, string? errorMessage = null)
+        protected string GetMessage(Camera camera, IEnumerable<string> foundTypes, List<AIPrediction> predictions, string? errorMessage = null)
         {
             string result;
 
-            if (Config.AlternativeLabelling && Config.DrawMode == DrawMode.Matches)
+            if (Settings.AlternativeLabelling && Settings.DrawMode == DrawMode.Matches)
             {
                 // Defaulting into a generic label type
                 string typeLabel = foundTypes.Count() == 1 ? foundTypes.First() : "objects";
@@ -57,14 +59,14 @@ namespace SynoAI.Notifiers
             return result;
         }
 
-        protected static string? GetImageUrl(Camera camera, Notification notification)
+        protected string? GetImageUrl(Camera camera, Notification notification)
         {
-            if (Config.SynoAIUrl == null)
+            if (Settings.SynoAIUrl == null)
             {
                 return null;
             }
 
-            UriBuilder builder = new(Config.SynoAIUrl);
+            UriBuilder builder = new(Settings.SynoAIUrl);
             builder.Path += $"{camera.Name}/{notification.ProcessedImage.FileName}";
 
             return builder.Uri.ToString();
@@ -73,7 +75,7 @@ namespace SynoAI.Notifiers
         /// <summary>
         /// Generates a JSON representation of the notification.
         /// </summary>
-        protected static string GenerateJSON(Camera camera, Notification notification, bool sendImage)
+        protected string GenerateJSON(Camera camera, Notification notification, bool sendImage)
         {
             dynamic jsonObject = new ExpandoObject();
 

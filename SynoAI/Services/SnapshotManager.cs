@@ -1,12 +1,23 @@
+using Microsoft.Extensions.Options;
 using SkiaSharp;
 using SynoAI.Extensions;
 using SynoAI.Models;
+using SynoAI.Settings;
 using System.Diagnostics;
 
 namespace SynoAI.Services
 {
-    internal class SnapshotManager
+    internal sealed class SnapshotManager
     {
+        private readonly IOptionsMonitor<AppSettings> _options;
+
+        public SnapshotManager(IOptionsMonitor<AppSettings> options)
+        {
+            _options = options;
+        }
+
+        private AppSettings Settings => _options.CurrentValue;
+
         /// <summary>
         /// Dresses the source image by adding the boundary boxes and saves the file locally.
         /// </summary>
@@ -16,7 +27,7 @@ namespace SynoAI.Services
         /// <param name="validPredictions">The list of predictions with the right size and matching the type of objects of interest for this camera.</param>
         /// <param name="logger"></param>
         /// <param name="preloadedBitmap">Optional pre-decoded bitmap from rotation, to avoid a redundant decode.</param>
-        public static ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger, SKBitmap? preloadedBitmap = null)
+        public ProcessedImage DressImage(Camera camera, byte[] snapshot, IEnumerable<AIPrediction> predictions, IEnumerable<AIPrediction> validPredictions, ILogger logger, SKBitmap? preloadedBitmap = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -24,7 +35,7 @@ namespace SynoAI.Services
             SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException("Failed to decode snapshot.");
 
             // Draw the exclusion zones if enabled
-            if (Config.DrawExclusions && camera.Exclusions != null)
+            if (Settings.DrawExclusions && camera.Exclusions != null)
             {
                 logger.LogInformation("{CameraName}: Drawing exclusion zones.",
                     camera.Name);
@@ -37,14 +48,14 @@ namespace SynoAI.Services
                     canvas.DrawRect(rectangle, new SKPaint
                     {
                         Style = SKPaintStyle.Stroke,
-                        Color = GetColour(Config.ExclusionBoxColor),
-                        StrokeWidth = Config.StrokeWidth
+                        Color = GetColour(Settings.ExclusionBoxColor),
+                        StrokeWidth = Settings.StrokeWidth
                     });
                 }
             }
 
             // Don't process the drawing if the drawing mode is off
-            if (Config.DrawMode == DrawMode.Off)
+            if (Settings.DrawMode == DrawMode.Off)
             {
                 logger.LogInformation("{CameraName}: Draw mode is Off. Skipping image boundaries.",
                     camera.Name);
@@ -57,20 +68,20 @@ namespace SynoAI.Services
                 using SKCanvas canvas = new(image);
                 int counter = 1; //used for assigning a reference number on each prediction if AlternativeLabelling is true
 
-                foreach (AIPrediction prediction in Config.DrawMode == DrawMode.All ? predictions : validPredictions)
+                foreach (AIPrediction prediction in Settings.DrawMode == DrawMode.All ? predictions : validPredictions)
                 {
                     // Draw the box
                     SKRect rectangle = SKRect.Create(prediction.MinX, prediction.MinY, prediction.SizeX, prediction.SizeY);
                     canvas.DrawRect(rectangle, new SKPaint
                     {
                         Style = SKPaintStyle.Stroke,
-                        Color = GetColour(Config.BoxColor),
-                        StrokeWidth = Config.StrokeWidth
+                        Color = GetColour(Settings.BoxColor),
+                        StrokeWidth = Settings.StrokeWidth
                     });
 
                     // Label creation, either classic label or alternative labelling (and only if there is more than one object)
                     string label = String.Empty;
-                    if (Config.AlternativeLabelling && Config.DrawMode == DrawMode.Matches)
+                    if (Settings.AlternativeLabelling && Settings.DrawMode == DrawMode.Matches)
                     {
                         // On alternatie labelling, just place a reference number and only if there is more than one object
                         if (validPredictions.Count() > 1)
@@ -86,43 +97,43 @@ namespace SynoAI.Services
                     }
 
                     // Label positioning
-                    int x = prediction.MinX + Config.TextOffsetX;
-                    int y = prediction.MinY + Config.FontSize + Config.TextOffsetY; // FontSize is added as text is drawn above the bottom co-ordinate
+                    int x = prediction.MinX + Settings.TextOffsetX;
+                    int y = prediction.MinY + Settings.FontSize + Settings.TextOffsetY; // FontSize is added as text is drawn above the bottom co-ordinate
 
                     // Consider below box placement
-                    if (Config.LabelBelowBox)
+                    if (Settings.LabelBelowBox)
                     {
                         y += prediction.SizeY;
                     }
 
                     // Draw background box for the text if required
-                    SKTypeface typeface = SKTypeface.FromFamilyName(Config.Font);
+                    SKTypeface typeface = SKTypeface.FromFamilyName(Settings.Font);
 
                     // Create the font object for font-related properties
                     SKFont font = new()
                     {
                         Typeface = typeface,
-                        Size = Config.FontSize
+                        Size = Settings.FontSize
                     };
 
                     // Create the paint object for other drawing properties
                     SKPaint paint = new()
                     {
                         IsAntialias = true,
-                        Color = GetColour(Config.FontColor)
+                        Color = GetColour(Settings.FontColor)
                     };
 
-                    string textBoxColor = Config.TextBoxColor;
+                    string textBoxColor = Settings.TextBoxColor;
                     if (!string.IsNullOrWhiteSpace(textBoxColor) && !textBoxColor.Equals(SKColors.Transparent.ToString(), StringComparison.OrdinalIgnoreCase))
                     {
                         // Use SKFont to measure text width
                         float textWidth = font.MeasureText(label);
-                        float textBoxWidth = textWidth + (Config.TextOffsetX * 2);
-                        float textBoxHeight = Config.FontSize + (Config.TextOffsetY * 2);
+                        float textBoxWidth = textWidth + (Settings.TextOffsetX * 2);
+                        float textBoxHeight = Settings.FontSize + (Settings.TextOffsetY * 2);
 
-                        float textBoxX = prediction.MinX + Config.StrokeWidth;
-                        float textBoxY = prediction.MinY + Config.TextOffsetY;
-                        if (Config.LabelBelowBox)
+                        float textBoxX = prediction.MinX + Settings.StrokeWidth;
+                        float textBoxY = prediction.MinY + Settings.TextOffsetY;
+                        if (Settings.LabelBelowBox)
                         {
                             textBoxY += prediction.SizeY;
                         }
@@ -132,12 +143,12 @@ namespace SynoAI.Services
                         {
                             Style = SKPaintStyle.StrokeAndFill,
                             Color = GetColour(textBoxColor),
-                            StrokeWidth = Config.StrokeWidth
+                            StrokeWidth = Settings.StrokeWidth
                         });
                     }
 
                     // Draw the text using the previously defined font
-                    canvas.DrawText(label, x, y, font, paint);
+                    canvas.DrawText(label, x, y, SKTextAlign.Left, font, paint);
                 }
             }
 
@@ -158,7 +169,7 @@ namespace SynoAI.Services
         /// <param name="logger"></param>
         /// <param name="camera">The camera to save the image for.</param>
         /// <param name="snapshot">The image to save.</param>
-        public static string SaveOriginalImage(ILogger logger, Camera camera, byte[] snapshot)
+        public string SaveOriginalImage(ILogger logger, Camera camera, byte[] snapshot)
         {
             SKBitmap image = SKBitmap.Decode(new MemoryStream(snapshot)) ?? throw new InvalidOperationException("Failed to decode original snapshot.");
             return SaveImage(logger, camera, image, "Original");
@@ -172,7 +183,7 @@ namespace SynoAI.Services
         /// <param name="camera">The camera to save the image for.</param>
         /// <param name="image">The image to save.</param>
         /// <param name="suffix"></param>
-        private static string SaveImage(ILogger logger, Camera camera, SKBitmap image, string? suffix = null)
+        private string SaveImage(ILogger logger, Camera camera, SKBitmap image, string? suffix = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -192,7 +203,7 @@ namespace SynoAI.Services
             //Which is used for graphs.
 
             string fileName;
-            if (Config.AlternativeLabelling)
+            if (Settings.AlternativeLabelling)
             {
                 fileName = $"{DateTime.Now:yyyy_MM_dd_HH_mm_ss}";
                 if (!string.IsNullOrWhiteSpace(suffix))

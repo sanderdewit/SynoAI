@@ -32,7 +32,7 @@ namespace SynoAI.Notifiers.SynologyChat
             var request = new
             {
                 text = message,
-                file_url = new Uri(new Uri(Config.Url), new Uri($"Image/{camera.Name}/{notification.ProcessedImage.FileName}", UriKind.Relative))
+                file_url = new Uri(new Uri(Settings.Url), new Uri($"Image/{camera.Name}/{notification.ProcessedImage.FileName}", UriKind.Relative))
             };
 
             string requestJson = JsonSerializer.Serialize(request, Shared.JsonOptions);

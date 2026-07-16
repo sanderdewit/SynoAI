@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using SkiaSharp;
-using SynoAI.Hubs;
 using SynoAI.Models;
 using SynoAI.Notifiers;
+using SynoAI.Settings;
 using System.Diagnostics;
 
 namespace SynoAI.Services
@@ -11,65 +11,73 @@ namespace SynoAI.Services
     {
         private readonly IAIService _aiService;
         private readonly ISynologyService _synologyService;
-        private readonly IHubContext<SynoAIHub> _hubContext;
+        private readonly SnapshotManager _snapshotManager;
+        private readonly IReadOnlyList<INotifier> _notifiers;
+        private readonly IOptionsMonitor<AppSettings> _options;
         private readonly ILogger<CameraProcessingService> _logger;
 
         public CameraProcessingService(
             IAIService aiService,
             ISynologyService synologyService,
-            IHubContext<SynoAIHub> hubContext,
+            SnapshotManager snapshotManager,
+            IReadOnlyList<INotifier> notifiers,
+            IOptionsMonitor<AppSettings> options,
             ILogger<CameraProcessingService> logger)
         {
             _aiService = aiService;
             _synologyService = synologyService;
-            _hubContext = hubContext;
+            _snapshotManager = snapshotManager;
+            _notifiers = notifiers;
+            _options = options;
             _logger = logger;
         }
+
+        private AppSettings Settings => _options.CurrentValue;
 
         public async Task<bool> ProcessAsync(string id, Camera camera)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            for (int snapshotCount = 1; snapshotCount <= Config.MaxSnapshots; snapshotCount++)
+            for (int snapshotCount = 1; snapshotCount <= Settings.MaxSnapshots; snapshotCount++)
             {
-                _logger.LogInformation("{Id}: Snapshot {Count} of {Max} requested at {Ms}ms.", id, snapshotCount, Config.MaxSnapshots, stopwatch.ElapsedMilliseconds);
+                _logger.LogInformation("{Id}: Snapshot {Count} of {Max} requested at {Ms}ms.", id, snapshotCount, Settings.MaxSnapshots, stopwatch.ElapsedMilliseconds);
 
                 byte[]? snapshot = await GetSnapshotAsync(id);
                 if (snapshot == null)
                     continue;
 
-                _logger.LogInformation("{Id}: Snapshot {Count} of {Max} received at {Ms}ms.", id, snapshotCount, Config.MaxSnapshots, stopwatch.ElapsedMilliseconds);
+                _logger.LogInformation("{Id}: Snapshot {Count} of {Max} received at {Ms}ms.", id, snapshotCount, Settings.MaxSnapshots, stopwatch.ElapsedMilliseconds);
 
                 (byte[] processedBytes, SKBitmap? processedBitmap) = PreProcessSnapshot(camera, snapshot);
 
                 List<AIPrediction> predictions = await GetAIPredictionsAsync(camera, processedBytes) ?? new();
 
-                _logger.LogInformation("{Id}: Snapshot {Count} of {Max} contains {PredCount} objects at {Ms}ms.", id, snapshotCount, Config.MaxSnapshots, predictions.Count, stopwatch.ElapsedMilliseconds);
+                _logger.LogInformation("{Id}: Snapshot {Count} of {Max} contains {PredCount} objects at {Ms}ms.", id, snapshotCount, Settings.MaxSnapshots, predictions.Count, stopwatch.ElapsedMilliseconds);
 
                 List<AIPrediction> validPredictions = FilterPredictions(id, camera, predictions, stopwatch);
 
-                if (Config.SaveOriginalSnapshot == SaveSnapshotMode.Always ||
-                    (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithPredictions && predictions.Count > 0) ||
-                    (Config.SaveOriginalSnapshot == SaveSnapshotMode.WithValidPredictions && validPredictions.Count > 0))
+                if (Settings.SaveOriginalSnapshot == SaveSnapshotMode.Always ||
+                    (Settings.SaveOriginalSnapshot == SaveSnapshotMode.WithPredictions && predictions.Count > 0) ||
+                    (Settings.SaveOriginalSnapshot == SaveSnapshotMode.WithValidPredictions && validPredictions.Count > 0))
                 {
                     _logger.LogInformation("{Id}: Saving original image", id);
-                    SnapshotManager.SaveOriginalImage(_logger, camera, processedBytes);
+                    _snapshotManager.SaveOriginalImage(_logger, camera, processedBytes);
                 }
 
                 if (validPredictions.Count > 0)
                 {
-                    ProcessedImage processedImage = SnapshotManager.DressImage(camera, processedBytes, predictions, validPredictions, _logger, processedBitmap);
+                    ProcessedImage processedImage = _snapshotManager.DressImage(camera, processedBytes, predictions, validPredictions, _logger, processedBitmap);
 
                     Notification notification = new()
                     {
                         ProcessedImage = processedImage,
-                        ValidPredictions = validPredictions
+                        ValidPredictions = validPredictions,
+                        Settings = Settings
                     };
 
                     await SendNotificationsAsync(camera, notification);
-                    await _hubContext.Clients.All.SendAsync("ReceiveSnapshot", camera.Name, processedImage.FileName);
 
-                    _logger.LogInformation("{Id}: Valid object found in snapshot {Count} of {Max} at {Ms}ms.", id, snapshotCount, Config.MaxSnapshots, stopwatch.ElapsedMilliseconds);
+                    _logger.LogInformation("{Id}: Valid object found in snapshot {Count} of {Max} at {Ms}ms.", id, snapshotCount, Settings.MaxSnapshots, stopwatch.ElapsedMilliseconds);
                     return true;
                 }
 
@@ -86,65 +94,42 @@ namespace SynoAI.Services
 
         private List<AIPrediction> FilterPredictions(string id, Camera camera, List<AIPrediction> predictions, Stopwatch stopwatch)
         {
-            int minSizeX = camera.GetMinSizeX();
-            int minSizeY = camera.GetMinSizeY();
-            int maxSizeX = camera.GetMaxSizeX();
-            int maxSizeY = camera.GetMaxSizeY();
+            int minSizeX = camera.GetMinSizeX(Settings);
+            int minSizeY = camera.GetMinSizeY(Settings);
+            int maxSizeX = camera.GetMaxSizeX(Settings);
+            int maxSizeY = camera.GetMaxSizeY(Settings);
 
             List<AIPrediction> valid = new();
             foreach (AIPrediction prediction in predictions)
             {
-                if (camera.Types != null && !camera.Types.Contains(prediction.Label, StringComparer.OrdinalIgnoreCase))
+                if (!PredictionFilter.IsTypeOfInterest(camera, prediction))
                 {
                     _logger.LogDebug("{Id}: Ignored '{Label}' as it's not in the valid type list at {Ms}ms.", id, prediction.Label, stopwatch.ElapsedMilliseconds);
                 }
-                else if (prediction.SizeX < minSizeX || prediction.SizeY < minSizeY)
+                else if (!PredictionFilter.MeetsMinimumSize(prediction, minSizeX, minSizeY))
                 {
                     _logger.LogDebug("{Id}: Ignored '{Label}' as it's under the minimum size ({MinX}x{MinY}) at {Ms}ms.", id, prediction.Label, minSizeX, minSizeY, stopwatch.ElapsedMilliseconds);
                 }
-                else if ((maxSizeX < int.MaxValue && prediction.SizeX > maxSizeX) || (maxSizeY < int.MaxValue && prediction.SizeY > maxSizeY))
+                else if (!PredictionFilter.MeetsMaximumSize(prediction, maxSizeX, maxSizeY))
                 {
                     _logger.LogDebug("{Id}: Ignored '{Label}' as it exceeds the maximum size ({MaxX}x{MaxY}) at {Ms}ms.", id, prediction.Label, maxSizeX, maxSizeY, stopwatch.ElapsedMilliseconds);
                 }
-                else if (ShouldIncludePrediction(id, camera, stopwatch, prediction))
+                else
                 {
-                    valid.Add(prediction);
-                    _logger.LogDebug("{Id}: Valid prediction '{Label}' at {Ms}ms.", id, prediction.Label, stopwatch.ElapsedMilliseconds);
+                    Zone? exclusionZone = PredictionFilter.FindExclusionZone(camera.Exclusions, prediction);
+                    if (exclusionZone != null)
+                    {
+                        _logger.LogDebug("{Id}: Ignored '{Label}' as it fell within an exclusion zone (mode '{Mode}') at {Ms}ms.",
+                            id, prediction.Label, exclusionZone.Mode, stopwatch.ElapsedMilliseconds);
+                    }
+                    else
+                    {
+                        valid.Add(prediction);
+                        _logger.LogDebug("{Id}: Valid prediction '{Label}' at {Ms}ms.", id, prediction.Label, stopwatch.ElapsedMilliseconds);
+                    }
                 }
             }
             return valid;
-        }
-
-        private bool ShouldIncludePrediction(string id, Camera camera, Stopwatch stopwatch, AIPrediction prediction)
-        {
-            if (camera.Exclusions == null || camera.Exclusions.Count == 0)
-                return true;
-
-            int predMinX = prediction.MinX;
-            int predMinY = prediction.MinY;
-            int predMaxX = prediction.MaxX;
-            int predMaxY = prediction.MaxY;
-
-            foreach (Zone exclusion in camera.Exclusions)
-            {
-                int startX = Math.Min(exclusion.Start.X, exclusion.End.X);
-                int startY = Math.Min(exclusion.Start.Y, exclusion.End.Y);
-                int endX = Math.Max(exclusion.Start.X, exclusion.End.X);
-                int endY = Math.Max(exclusion.Start.Y, exclusion.End.Y);
-
-                bool exclude = exclusion.Mode == OverlapMode.Contains
-                    ? startX <= predMinX && startY <= predMinY && endX >= predMaxX && endY >= predMaxY
-                    : predMinX < endX && predMaxX > startX && predMinY < endY && predMaxY > startY;
-
-                if (exclude)
-                {
-                    string modeStr = exclusion.Mode.ToString();
-                    _logger.LogDebug("{Id}: Ignored '{Label}' as it fell within an exclusion zone (mode '{Mode}') at {Ms}ms.",
-                        id, prediction.Label, modeStr, stopwatch.ElapsedMilliseconds);
-                    return false;
-                }
-            }
-            return true;
         }
 
         private (byte[] bytes, SKBitmap? bitmap) PreProcessSnapshot(Camera camera, byte[] snapshot)
@@ -182,7 +167,7 @@ namespace SynoAI.Services
                 canvas.Translate(rotatedWidth / 2, rotatedHeight / 2);
                 canvas.RotateDegrees((float)angle);
                 canvas.Translate(-originalWidth / 2, -originalHeight / 2);
-                canvas.DrawBitmap(bitmap, new SKPoint());
+                canvas.DrawBitmap(bitmap, new SKPoint(), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
             }
             return rotatedBitmap;
         }
@@ -228,7 +213,7 @@ namespace SynoAI.Services
 
             IEnumerable<string> labels = notification.ValidPredictions.Select(x => x.Label).Distinct().ToList();
 
-            IEnumerable<INotifier> notifiers = Config.Notifiers
+            IEnumerable<INotifier> notifiers = _notifiers
                 .Where(x =>
                     (x.Cameras == null || !x.Cameras.Any() || x.Cameras.Any(c => c.Equals(camera.Name, StringComparison.OrdinalIgnoreCase))) &&
                     (x.Types == null || !x.Types.Any() || x.Types.Any(t => labels.Contains(t, StringComparer.OrdinalIgnoreCase)))

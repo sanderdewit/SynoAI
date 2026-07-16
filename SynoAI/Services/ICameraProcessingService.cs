@@ -2,6 +2,9 @@ using SynoAI.Models;
 
 namespace SynoAI.Services
 {
+    /// <summary>
+    /// Orchestrates snapshot retrieval, AI detection, filtering and notification for a camera.
+    /// </summary>
     public interface ICameraProcessingService
     {
         /// <summary>

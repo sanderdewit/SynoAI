@@ -7,11 +7,7 @@
     public enum AIType
     {
         /// <summary>
-        /// DeepStackAI.
-        /// </summary>
-        DeepStack,
-        /// <summary>
-        /// CodeProjectAIServer.
+        /// CodeProject.AI Server (https://www.codeproject.com/ai).
         /// </summary>
         CodeProjectAIServer
     }

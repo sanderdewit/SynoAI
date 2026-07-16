@@ -168,9 +168,9 @@ namespace SynoAI.Notifiers.Webhook
         /// Gets a <see cref="HttpClient"/> object for the Webhook request.
         /// </summary>
         /// <returns>A <see cref="HttpClient"/>.</returns>
-        private static HttpClient GetHttpClient()
+        private HttpClient GetHttpClient()
         {
-            if (!Config.AllowInsecureUrl)
+            if (!Settings.AllowInsecureUrl)
             {
                 return new();
             }
