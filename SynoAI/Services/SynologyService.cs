@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 using SynoAI.App;
 using SynoAI.Models;
+using SynoAI.Settings;
 
 namespace SynoAI.Services
 {
@@ -28,21 +30,23 @@ namespace SynoAI.Services
         private string? LoginPath { get; set; }
         private string? CameraPath { get; set; }
 
-        private readonly IHostApplicationLifetime _applicationLifetime;
         private readonly ILogger<SynologyService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IOptionsMonitor<AppSettings> _options;
 
-        public SynologyService(IHostApplicationLifetime applicationLifetime, ILogger<SynologyService> logger, IHttpClientFactory httpClientFactory)
+        public SynologyService(ILogger<SynologyService> logger, IHttpClientFactory httpClientFactory, IOptionsMonitor<AppSettings> options)
         {
-            _applicationLifetime = applicationLifetime;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _options = options;
         }
+
+        private AppSettings Settings => _options.CurrentValue;
 
         private HttpClient GetSynologyClient()
         {
             HttpClient client = _httpClientFactory.CreateClient("Synology");
-            client.BaseAddress = new Uri(Config.Url);
+            client.BaseAddress = new Uri(Settings.Url);
             return client;
         }
 
@@ -68,9 +72,9 @@ namespace SynoAI.Services
                     if (response.Data.TryGetValue(API_LOGIN, out SynologyApiInfo? loginInfo))
                     {
                         _logger.LogDebug("API: Found path '{Path}' for {Api}", loginInfo.Path, API_LOGIN);
-                        if (loginInfo.MaxVersion < Config.ApiVersionAuth)
+                        if (loginInfo.MaxVersion < Settings.ApiVersionAuth)
                         {
-                            _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, loginInfo.MaxVersion, Config.ApiVersionAuth);
+                            _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, loginInfo.MaxVersion, Settings.ApiVersionAuth);
                             return false;
                         }
                     }
@@ -83,9 +87,9 @@ namespace SynoAI.Services
                     if (response.Data.TryGetValue(API_CAMERA, out SynologyApiInfo? cameraInfo))
                     {
                         _logger.LogDebug("API: Found path '{Path}' for {Api}", cameraInfo.Path, API_CAMERA);
-                        if (cameraInfo.MaxVersion < Config.ApiVersionCamera)
+                        if (cameraInfo.MaxVersion < Settings.ApiVersionCamera)
                         {
-                            _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, cameraInfo.MaxVersion, Config.ApiVersionCamera);
+                            _logger.LogError("API: {Api} only supports max version {Max}, configured version is {Configured}.", API_CAMERA, cameraInfo.MaxVersion, Settings.ApiVersionCamera);
                             return false;
                         }
                     }
@@ -99,8 +103,8 @@ namespace SynoAI.Services
                     CameraPath = cameraInfo.Path;
 
                     // Use the lesser of what the NAS supports and what we're configured to use.
-                    _authVersion = Math.Min(loginInfo.MaxVersion, Config.ApiVersionAuth);
-                    _cameraVersion = Math.Min(cameraInfo.MaxVersion, Config.ApiVersionCamera);
+                    _authVersion = Math.Min(loginInfo.MaxVersion, Settings.ApiVersionAuth);
+                    _cameraVersion = Math.Min(cameraInfo.MaxVersion, Settings.ApiVersionCamera);
 
                     _logger.LogInformation("API: Successfully mapped all end points");
                     return true;
@@ -127,8 +131,8 @@ namespace SynoAI.Services
                 new KeyValuePair<string, string>("api", "SYNO.API.Auth"),
                 new KeyValuePair<string, string>("method", "Login"),
                 new KeyValuePair<string, string>("version", _authVersion.ToString()),
-                new KeyValuePair<string, string>("account", Config.Username),
-                new KeyValuePair<string, string>("passwd", Config.Password),
+                new KeyValuePair<string, string>("account", Settings.Username),
+                new KeyValuePair<string, string>("passwd", Settings.Password),
                 new KeyValuePair<string, string>("session", "SurveillanceStation"),
             });
 
@@ -153,7 +157,6 @@ namespace SynoAI.Services
                     }
 
                     _logger.LogError("Login: Successful but session cookie 'id' not found in response.");
-                    _applicationLifetime.StopApplication();
                     return null;
                 }
                 else
@@ -206,7 +209,7 @@ namespace SynoAI.Services
 
             _logger.LogDebug("{CameraName}: Found with Synology ID '{Id}'.", cameraName, id);
 
-            string resource = string.Format(URI_CAMERA_SNAPSHOT + $"&profileType={(int)Config.Quality}", CameraPath, _cameraVersion, id);
+            string resource = string.Format(URI_CAMERA_SNAPSHOT + $"&profileType={(int)Settings.Quality}", CameraPath, _cameraVersion, id);
             _logger.LogDebug("{CameraName}: Taking snapshot from '{Resource}'.", cameraName, resource);
             _logger.LogInformation("{CameraName}: Taking snapshot", cameraName);
 
@@ -279,57 +282,52 @@ namespace SynoAI.Services
             _logger.LogInformation("Initialising");
             try
             {
+                // Initialisation failures are non-fatal: the web server (and settings UI) stays up so the
+                // configuration can be corrected. The camera webhook simply returns errors until a working
+                // configuration is in place and initialisation is retried (via ReinitialiseAsync).
                 bool retrievedEndPoints = await GetEndPointsAsync();
                 if (!retrievedEndPoints)
                 {
-                    _applicationLifetime.StopApplication();
+                    _logger.LogError("Initialisation incomplete: failed to map the Synology API endpoints.");
                     return;
                 }
 
                 _sessionCookieValue = await LoginAsync();
                 if (_sessionCookieValue == null)
                 {
-                    _applicationLifetime.StopApplication();
+                    _logger.LogError("Initialisation incomplete: failed to authenticate with Synology.");
                     return;
                 }
 
-                if (Config.Cameras == null || !Config.Cameras.Any())
+                if (Settings.Cameras.Count == 0)
                 {
-                    _logger.LogWarning("Aborting Initialisation: No Cameras were specified in the config.");
-                    _applicationLifetime.StopApplication();
-                    return;
-                }
-
-                if (Config.Notifiers == null || !Config.Notifiers.Any())
-                {
-                    _logger.LogWarning("Aborting Initialisation: No Notifications were specified in the config.");
-                    _applicationLifetime.StopApplication();
+                    _logger.LogWarning("Initialisation incomplete: no cameras were specified in the config.");
                     return;
                 }
 
                 IEnumerable<SynologyCamera>? synologyCameras = await GetCamerasAsync();
                 if (synologyCameras == null)
                 {
-                    _applicationLifetime.StopApplication();
+                    _logger.LogError("Initialisation incomplete: failed to fetch the Surveillance Station camera list.");
                     return;
                 }
 
-                Cameras = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                foreach (Camera camera in Config.Cameras)
+                Dictionary<string, int> cameras = new(StringComparer.OrdinalIgnoreCase);
+                foreach (Camera camera in Settings.Cameras)
                 {
                     SynologyCamera? match = synologyCameras.FirstOrDefault(x => x.GetName().Equals(camera.Name, StringComparison.OrdinalIgnoreCase));
                     if (match == null)
                         _logger.LogWarning("Initialise: The camera '{CameraName}' was not found in the Surveillance Station camera list.", camera.Name);
                     else
-                        Cameras.Add(camera.Name, match.Id);
+                        cameras.Add(camera.Name, match.Id);
                 }
+                Cameras = cameras;
 
                 _logger.LogInformation("Initialisation successful.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred initialising SynoAI. Exiting...");
-                _applicationLifetime.StopApplication();
+                _logger.LogError(ex, "An unhandled exception occurred initialising SynoAI.");
             }
         }
     }

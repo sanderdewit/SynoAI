@@ -1,22 +1,24 @@
 ﻿using System.Text.Json;
 using SynoAI.App;
 using SynoAI.Models;
+using SynoAI.Settings;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace SynoAI.AIs.AIProcessor
 {
-    internal class AIProcessorAI : AI
+    internal class AIProcessorAI
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly AppSettings _settings;
 
-        public AIProcessorAI(IHttpClientFactory httpClientFactory)
+        public AIProcessorAI(IHttpClientFactory httpClientFactory, AppSettings settings)
         {
             _httpClientFactory = httpClientFactory;
+            _settings = settings;
         }
 
-        public override AIType AIType => Config.AI;
-        public override async Task<IEnumerable<AIPrediction>?> Process(ILogger logger, Camera camera, byte[] image)
+        public async Task<IEnumerable<AIPrediction>?> Process(ILogger logger, Camera camera, byte[] image)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -33,13 +35,13 @@ namespace SynoAI.AIs.AIProcessor
 
             logger.LogDebug("{CameraName}: {AIType}: POSTing image with minimum confidence of {MinConfidence} ({CameraThreshold}%) to {BaseUrl}/{Path}.",
                 camera.Name,
-                this.AIType.ToString(),
+                _settings.AI.Type.ToString(),
                 minConfidence,
                 camera.Threshold,
-                Config.AIUrl,
-                Config.AIPath);
+                _settings.AI.Url,
+                _settings.AI.Path);
 
-            Uri uri = GetUri(Config.AIUrl, Config.AIPath);
+            Uri uri = GetUri(_settings.AI.Url, _settings.AI.Path);
 
             try
             {
@@ -47,11 +49,11 @@ namespace SynoAI.AIs.AIProcessor
                 HttpResponseMessage response = await httpClient.PostAsync(uri, multipartContent);
                 if (response.IsSuccessStatusCode)
                 {
-                    AIProcessorResponse deepStackResponse = await GetResponse(logger, camera, response, this.AIType);
-                    if (deepStackResponse.Success)
+                    AIProcessorResponse aiResponse = await GetResponse(logger, camera, response, _settings.AI.Type);
+                    if (aiResponse.Success)
                     {
                         // The AI already filtered by min_confidence server-side; map results directly.
-                        IEnumerable<AIPrediction> predictions = deepStackResponse.Predictions.Select(x => new AIPrediction()
+                        IEnumerable<AIPrediction> predictions = aiResponse.Predictions.Select(x => new AIPrediction()
                         {
                             Confidence = x.Confidence * 100,
                             Label = x.Label,
@@ -62,7 +64,7 @@ namespace SynoAI.AIs.AIProcessor
                         }).ToList();
 
                         stopwatch.Stop();
-                        string aiTypeName = this.AIType.ToString();
+                        string aiTypeName = _settings.AI.Type.ToString();
                         logger.LogInformation("{CameraName}: {AIType}: Processed successfully ({ElapsedMilliseconds}ms).",
                             camera.Name,
                             aiTypeName,
@@ -74,14 +76,14 @@ namespace SynoAI.AIs.AIProcessor
                     {
                         logger.LogWarning("{cameraName}: {AIType}: Failed with unknown error.",
                             camera.Name,
-                            this.AIType);
+                            _settings.AI.Type);
                     }
                 }
                 else
                 {
                     logger.LogWarning("{cameraName}: {AIType}: Failed to call API with HTTP status code '{responseStatusCode}'.",
                         camera.Name,
-                        this.AIType,
+                        _settings.AI.Type,
                         response.StatusCode);
                 }
             }
@@ -89,7 +91,7 @@ namespace SynoAI.AIs.AIProcessor
             {
                 logger.LogError("{camera.Name}: {AIType}: Failed to call API error '{ex}'.",
                     camera.Name,
-                    this.AIType,
+                    _settings.AI.Type,
                     ex
                     );
             }

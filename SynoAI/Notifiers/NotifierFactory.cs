@@ -6,6 +6,7 @@ using SynoAI.Notifiers.Pushover;
 using SynoAI.Notifiers.SynologyChat;
 using SynoAI.Notifiers.Telegram;
 using SynoAI.Notifiers.Webhook;
+using SynoAI.Settings;
 
 namespace SynoAI.Notifiers
 {
@@ -16,7 +17,7 @@ namespace SynoAI.Notifiers
     {
         public abstract INotifier Create(ILogger logger, IConfigurationSection section);
 
-        public static INotifier Create(NotifierType type, ILogger logger, IConfigurationSection section)
+        public static INotifier Create(NotifierType type, ILogger logger, IConfigurationSection section, AppSettings settings)
         {
             NotifierFactory factory = type switch
             {
@@ -31,6 +32,7 @@ namespace SynoAI.Notifiers
                 _ => throw new NotImplementedException(type.ToString()),
             };
             INotifier notifier = factory.Create(logger, section);
+            notifier.Settings = settings;
             notifier.Cameras = section.GetSection("Cameras").Get<List<string>>();
             notifier.Types = section.GetSection("Types").Get<List<string>>();
 

@@ -1,4 +1,6 @@
-﻿namespace SynoAI.Models
+﻿using SynoAI.Settings;
+
+namespace SynoAI.Models
 {
     /// <summary>
     /// Represents a camera object.
@@ -62,57 +64,57 @@
         /// <summary>
         /// Gets the minimum size the object must be horizontally to be considered as a valid result from either the current camera, or the main config default if not specified.
         /// </summary>
-        public int GetMinSizeX()
+        public int GetMinSizeX(AppSettings settings)
         {
-            return MinSizeX ?? Config.MinSizeX;
+            return MinSizeX ?? settings.MinSizeX;
         }
 
         /// <summary>
         /// Gets the minimum size the object must be vertically to be considered as a valid result from either the current camera, or the main config default if not specified.
         /// </summary>
-        public int GetMinSizeY()
+        public int GetMinSizeY(AppSettings settings)
         {
-            return MinSizeY ?? Config.MinSizeY;
+            return MinSizeY ?? settings.MinSizeY;
         }
 
         /// <summary>
         /// Gets the maximum size the object must be horizontally to be considered as a valid result from either the current camera, or the main config default if not specified.
         /// </summary>
-        public int GetMaxSizeX()
+        public int GetMaxSizeX(AppSettings settings)
         {
-            return MaxSizeX ?? Config.MaxSizeX;
+            return MaxSizeX ?? settings.MaxSizeX;
         }
 
         /// <summary>
         /// Gets the maximum size the object must be vertically to be considered as a valid result from either the current camera, or the main config default if not specified.
         /// </summary>
-        public int GetMaxSizeY()
+        public int GetMaxSizeY(AppSettings settings)
         {
-            return MaxSizeY ?? Config.MaxSizeY;
+            return MaxSizeY ?? settings.MaxSizeY;
         }
 
         /// <summary>
         /// Gets the maximum number of snapshots to take for the current camera, or the main config default if not specified.
         /// </summary>
-        public int GetMaxSnapshots()
+        public int GetMaxSnapshots(AppSettings settings)
         {
-            return MaxSnapshots ?? Config.MaxSnapshots;
+            return MaxSnapshots ?? settings.MaxSnapshots;
         }
 
         /// <summary>
         /// Gets the delay between the last camera motion detection and processing and the next.
         /// </summary>
-        public int GetDelay()
+        public int GetDelay(AppSettings settings)
         {
-            return Delay ?? Config.Delay;
+            return Delay ?? settings.Delay;
         }
 
         /// <summary>
-        /// Gets the delay between the last camera motion detection and processing and the next after the successful detection. 
+        /// Gets the delay between the last camera motion detection and processing and the next after the successful detection.
         /// </summary>
-        public int GetDelayAfterSuccess()
+        public int GetDelayAfterSuccess(AppSettings settings)
         {
-            return DelayAfterSuccess ?? Config.DelayAfterSuccess ?? GetDelay();
+            return DelayAfterSuccess ?? settings.DelayAfterSuccess ?? GetDelay(settings);
         }
 
         /// <inheritdoc />

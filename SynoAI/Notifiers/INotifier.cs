@@ -1,9 +1,14 @@
 ﻿using SynoAI.Models;
+using SynoAI.Settings;
 
 namespace SynoAI.Notifiers
 {
     internal interface INotifier
     {
+        /// <summary>
+        /// The application settings, injected when the notifier is built.
+        /// </summary>
+        AppSettings Settings { get; set; }
         /// <summary>
         /// The list of camera names that the notifier is for.
         /// </summary>

@@ -1,6 +1,7 @@
-﻿using SynoAI.AIs;
+﻿using Microsoft.Extensions.Options;
 using SynoAI.AIs.AIProcessor;
 using SynoAI.Models;
+using SynoAI.Settings;
 
 namespace SynoAI.Services
 {
@@ -8,26 +9,19 @@ namespace SynoAI.Services
     {
         private readonly ILogger<AIService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IOptionsMonitor<AppSettings> _options;
 
-        public AIService(ILogger<AIService> logger, IHttpClientFactory httpClientFactory)
+        public AIService(ILogger<AIService> logger, IHttpClientFactory httpClientFactory, IOptionsMonitor<AppSettings> options)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _options = options;
         }
 
         public async Task<IEnumerable<AIPrediction>?> ProcessAsync(Camera camera, byte[] image)
         {
-            AIProcessorAI ai = GetAI(_httpClientFactory);
+            AIProcessorAI ai = new(_httpClientFactory, _options.CurrentValue);
             return await ai.Process(_logger, camera, image);
-        }
-
-        private static AIProcessorAI GetAI(IHttpClientFactory httpClientFactory)
-        {
-            return Config.AI switch
-            {
-                AIType.DeepStack or AIType.CodeProjectAIServer => new AIProcessorAI(httpClientFactory),
-                _ => throw new NotImplementedException(Config.AI.ToString()),
-            };
         }
     }
 }

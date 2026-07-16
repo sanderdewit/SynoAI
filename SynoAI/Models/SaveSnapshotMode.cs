@@ -1,6 +1,9 @@
 namespace SynoAI.Models
 {
-    internal enum SaveSnapshotMode
+    /// <summary>
+    /// Controls whether the original, unprocessed snapshot is saved to disk.
+    /// </summary>
+    public enum SaveSnapshotMode
     {
         /// <summary>
         /// The snapshots are never saved.

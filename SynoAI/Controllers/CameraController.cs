@@ -1,27 +1,39 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using SynoAI.Models;
 using SynoAI.Models.DTOs;
 using SynoAI.Services;
+using SynoAI.Settings;
 using System.Collections.Concurrent;
 
 namespace SynoAI.Controllers
 {
+    /// <summary>
+    /// Entry point for Synology motion-alert webhooks and camera enable/disable requests.
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class CameraController : ControllerBase
     {
         private readonly ICameraProcessingService _processingService;
         private readonly ILogger<CameraController> _logger;
+        private readonly IOptionsMonitor<AppSettings> _options;
 
         private static readonly ConcurrentDictionary<string, bool> _runningCameraChecks = new(StringComparer.OrdinalIgnoreCase);
         private static readonly ConcurrentDictionary<string, DateTime> _delayedCameraChecks = new(StringComparer.OrdinalIgnoreCase);
         private static readonly ConcurrentDictionary<string, bool> _enabledCameras = new(StringComparer.OrdinalIgnoreCase);
 
-        public CameraController(ICameraProcessingService processingService, ILogger<CameraController> logger)
+        /// <summary>
+        /// Initialises a new instance of the <see cref="CameraController"/> class.
+        /// </summary>
+        public CameraController(ICameraProcessingService processingService, ILogger<CameraController> logger, IOptionsMonitor<AppSettings> options)
         {
             _processingService = processingService;
             _logger = logger;
+            _options = options;
         }
+
+        private AppSettings Settings => _options.CurrentValue;
 
         /// <summary>
         /// Called by the Synology motion alert hook.
@@ -42,7 +54,7 @@ namespace SynoAI.Controllers
                 return Ok();
             }
 
-            Camera? camera = Config.Cameras.FirstOrDefault(x => x.Name.Equals(id, StringComparison.OrdinalIgnoreCase));
+            Camera? camera = Settings.Cameras.FirstOrDefault(x => x.Name.Equals(id, StringComparison.OrdinalIgnoreCase));
             if (camera == null)
             {
                 _logger.LogError("{Id}: The camera was not found.", id);
@@ -78,7 +90,7 @@ namespace SynoAI.Controllers
             try
             {
                 bool found = await _processingService.ProcessAsync(id, camera);
-                AddCameraDelay(id, found ? camera.GetDelayAfterSuccess() : camera.GetDelay());
+                AddCameraDelay(id, found ? camera.GetDelayAfterSuccess(Settings) : camera.GetDelay(Settings));
             }
             finally
             {
