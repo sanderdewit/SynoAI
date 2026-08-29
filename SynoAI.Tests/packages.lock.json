@@ -8,16 +8,6 @@
         "resolved": "10.0.1",
         "contentHash": "27jXSV/0DbVqF5jDrAxuQFZ9oaz6gmG03p8ttxAFk+X0M4woFYj7MoWDLCna5EGLb0CE6OE7X6ZH3Wt5smTtaA=="
       },
-      "Microsoft.NET.Test.Sdk": {
-        "type": "Direct",
-        "requested": "[18.9.0, )",
-        "resolved": "18.9.0",
-        "contentHash": "xIzVXa/VpKXqDWzyC/5Hw8JbFY5u9k3Jc53CpcjBiOXvkQGio484LD9FNwOiGUSMDcYL3Rcw9sNgGi5WrswlPQ==",
-        "dependencies": {
-          "Microsoft.CodeCoverage": "18.9.0",
-          "Microsoft.TestPlatform.TestHost": "18.9.0"
-        }
-      },
       "Microsoft.NETCore.Platforms": {
         "type": "Direct",
         "requested": "[7.0.4, )",
@@ -71,11 +61,6 @@
         "type": "Transitive",
         "resolved": "6.0.0",
         "contentHash": "UcSjPsst+DfAdJGVDsu346FX0ci0ah+lw3WRtn18NUwEqRt70HaOQ7lI72vy3+1LxtqI3T5GWwV39rQSrCzAeg=="
-      },
-      "Microsoft.CodeCoverage": {
-        "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "MtegCIKGuG0r/LCdIjoR1HgzCGIUBhR3aNdbtQpts5vMXQuqBDZ2Jsd2uFKoHFM2XrQV6ZrDf3F5oLi3SLTp8w=="
       },
       "Microsoft.Extensions.ApiDescription.Server": {
         "type": "Transitive",
@@ -139,19 +124,6 @@
         "contentHash": "iVAvNbZ5JPDZSrTcIrCDoCsAkzjDxwDEt2mDuMd8ng1P6e2P2NCd0g0BsoBVG+nJLSmK//V+yeEvjCa3E2fxHw==",
         "dependencies": {
           "Microsoft.Testing.Platform": "2.3.3"
-        }
-      },
-      "Microsoft.TestPlatform.ObjectModel": {
-        "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "Fz/qXC52VXXopzHj7v2reCKcCqSxkTDCkEDfkNAH0vni/7qK/KLMiEYtRmnUanxO2F2g2zZZ60qCpxF0AF7URA=="
-      },
-      "Microsoft.TestPlatform.TestHost": {
-        "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "Oq+Pma/J86aZL72t71bcESvDszDsTjUfl6PIsuDdPoKTHZfNMhKamCfLD5fKx51W/u0KozXtJo2/3fnt0sgPxg==",
-        "dependencies": {
-          "Microsoft.TestPlatform.ObjectModel": "18.9.0"
         }
       },
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
@@ -246,8 +218,8 @@
       },
       "Telegram.Bot": {
         "type": "Transitive",
-        "resolved": "22.10.2.1",
-        "contentHash": "ahioWueF0SG4Me2Tp76Ja3LgUpJL1DWHtlagbSlsL+o07SLNCSMQLsusLfukay4T9NpJHPsSgJVbjn2f1529Tw==",
+        "resolved": "22.10.3",
+        "contentHash": "ni2Jf5AJIl7P+kcjyKplu/5HVSg/rqy3C9TWWsYXKuNaFtp16+H5ZhlwCRHcxIooeuNBPka3MaDd7LOTXE5h2w==",
         "dependencies": {
           "Microsoft.Extensions.Options": "8.0.0"
         }
@@ -329,7 +301,7 @@
           "SkiaSharp": "[4.151.1, )",
           "SkiaSharp.NativeAssets.Linux": "[4.151.1, )",
           "Swashbuckle.AspNetCore": "[10.2.3, )",
-          "Telegram.Bot": "[22.10.2.1, )"
+          "Telegram.Bot": "[22.10.3, )"
         }
       }
     }
