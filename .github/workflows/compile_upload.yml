@@ -115,7 +115,7 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet run --project SynoAI.Tests/SynoAI.Tests.csproj --no-build
 
   publish:
     needs: build
