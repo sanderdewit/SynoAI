@@ -53,9 +53,9 @@
       },
       "Telegram.Bot": {
         "type": "Direct",
-        "requested": "[22.10.2.1, )",
-        "resolved": "22.10.2.1",
-        "contentHash": "ahioWueF0SG4Me2Tp76Ja3LgUpJL1DWHtlagbSlsL+o07SLNCSMQLsusLfukay4T9NpJHPsSgJVbjn2f1529Tw=="
+        "requested": "[22.10.3, )",
+        "resolved": "22.10.3",
+        "contentHash": "ni2Jf5AJIl7P+kcjyKplu/5HVSg/rqy3C9TWWsYXKuNaFtp16+H5ZhlwCRHcxIooeuNBPka3MaDd7LOTXE5h2w=="
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",

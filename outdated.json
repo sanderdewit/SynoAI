@@ -1,11 +1,9 @@
 Discovering projects...
 Analyzing project(s)...
 Analyzing dependencies...
-» SynoAI.Tests
+» SynoAI
   [net10.0]
-  Microsoft.NET.Test.Sdk     18.8.1 -> 18.9.0
-  xunit.runner.visualstudio  3.1.5  -> 4.0.0 
-  xunit.v3                   3.2.2  -> 4.0.0 
+  Telegram.Bot  22.10.2.1 -> 22.10.3
 
 Version color legend:
 <red>   : Major version update or pre-release version. Possible breaking changes.
@@ -13,4 +11,4 @@ Version color legend:
 <green> : Patch version update. Backwards-compatible bug fixes.
 
 You can upgrade packages to the latest version by passing the -u or -u:prompt option.
-Elapsed: 00:00:08.7729967
+Elapsed: 00:00:10.6804196
