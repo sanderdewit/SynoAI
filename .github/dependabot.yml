@@ -1,0 +1,40 @@
+version: 2
+
+updates:
+  # NuGet packages for SynoAI and SynoAI.Tests (discovered via SynoAI.sln).
+  # Patch and minor bumps arrive as one grouped PR per week; major bumps get
+  # their own PR so breaking changes can be reviewed on their own.
+  # Security updates (including transitive packages) are raised as soon as an
+  # advisory is published, independent of this schedule.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      nuget-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # Base images in SynoAI/Dockerfile. The .NET major version is tied to the
+  # TargetFramework in the .csproj, so major bumps are left to a manual upgrade.
+  - package-ecosystem: docker
+    directory: /SynoAI
+    schedule:
+      interval: weekly
+      day: monday
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+    groups:
+      dotnet-images:
+        patterns: ["*"]

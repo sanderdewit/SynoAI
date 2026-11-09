@@ -1,13 +1,19 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-RUN apt-get update && apt-get install -y libgdiplus
+# SkiaSharp's native library needs fontconfig, plus at least one font to draw labels with.
+# (libgdiplus was only needed by System.Drawing, which this app no longer uses.)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libfontconfig1 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+# .NET 8+ container images listen on 8080 by default (ASPNETCORE_HTTP_PORTS).
+EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["SynoAI.csproj", "./"]
-RUN dotnet restore "SynoAI.csproj"
+COPY ["SynoAI.csproj", "packages.lock.json", "./"]
+# Locked mode: the image gets exactly the package graph CI restored and tested,
+# instead of re-resolving transitive versions from the bare .csproj.
+RUN dotnet restore "SynoAI.csproj" --locked-mode
 COPY . .
 
 WORKDIR "/src/."
