@@ -48,7 +48,8 @@ namespace SynoAI.Services
 
                 _logger.LogInformation("{Id}: Snapshot {Count} of {Max} received at {Ms}ms.", id, snapshotCount, Settings.MaxSnapshots, stopwatch.ElapsedMilliseconds);
 
-                (byte[] processedBytes, SKBitmap? processedBitmap) = PreProcessSnapshot(camera, snapshot);
+                (byte[] processedBytes, SKBitmap? rotatedBitmap) = PreProcessSnapshot(camera, snapshot);
+                using SKBitmap? processedBitmap = rotatedBitmap;
 
                 List<AIPrediction> predictions = await GetAIPredictionsAsync(camera, processedBytes) ?? new();
 
@@ -138,16 +139,26 @@ namespace SynoAI.Services
                 return (snapshot, null);
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            SKBitmap bitmap = SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException($"{camera.Name}: Failed to decode snapshot for rotation.");
+            SKBitmap bitmap;
+            using (SKBitmap original = SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException($"{camera.Name}: Failed to decode snapshot for rotation."))
+            {
+                _logger.LogInformation("{CameraName}: Rotating image {Degrees} degrees.", camera.Name, camera.Rotate);
+                bitmap = Rotate(original, camera.Rotate);
+            }
 
-            _logger.LogInformation("{CameraName}: Rotating image {Degrees} degrees.", camera.Name, camera.Rotate);
-            bitmap = Rotate(bitmap, camera.Rotate);
+            try
+            {
+                using SKPixmap pixmap = bitmap.PeekPixels() ?? throw new InvalidOperationException($"{camera.Name}: Failed to get pixel data from rotated bitmap.");
+                using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, Constants.JPEG_QUALITY) ?? throw new InvalidOperationException($"{camera.Name}: Failed to encode rotated image.");
+                _logger.LogInformation("{CameraName}: Image preprocessing complete ({Ms}ms).", camera.Name, stopwatch.ElapsedMilliseconds);
 
-            using SKPixmap pixmap = bitmap.PeekPixels() ?? throw new InvalidOperationException($"{camera.Name}: Failed to get pixel data from rotated bitmap.");
-            using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, 100) ?? throw new InvalidOperationException($"{camera.Name}: Failed to encode rotated image.");
-            _logger.LogInformation("{CameraName}: Image preprocessing complete ({Ms}ms).", camera.Name, stopwatch.ElapsedMilliseconds);
-
-            return (data.ToArray(), bitmap);
+                return (data.ToArray(), bitmap);
+            }
+            catch
+            {
+                bitmap.Dispose();
+                throw;
+            }
         }
 
         private static SKBitmap Rotate(SKBitmap bitmap, double angle)

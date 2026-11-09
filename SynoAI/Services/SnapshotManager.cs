@@ -32,7 +32,9 @@ namespace SynoAI.Services
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             // Reuse the bitmap from rotation if provided, avoiding a redundant decode.
-            SKBitmap image = preloadedBitmap ?? SKBitmap.Decode(snapshot) ?? throw new InvalidOperationException("Failed to decode snapshot.");
+            // A preloaded bitmap is owned (and disposed) by the caller; one decoded here is disposed here.
+            using SKBitmap? decoded = preloadedBitmap == null ? SKBitmap.Decode(snapshot) : null;
+            SKBitmap image = preloadedBitmap ?? decoded ?? throw new InvalidOperationException("Failed to decode snapshot.");
 
             // Draw the exclusion zones if enabled
             if (Settings.DrawExclusions && camera.Exclusions != null)
@@ -41,16 +43,18 @@ namespace SynoAI.Services
                     camera.Name);
 
                 using SKCanvas canvas = new(image);
+                using SKPaint exclusionPaint = new()
+                {
+                    Style = SKPaintStyle.Stroke,
+                    Color = GetColour(Settings.ExclusionBoxColor),
+                    StrokeWidth = Settings.StrokeWidth
+                };
+
                 // Draw the zone
                 foreach (Zone zone in camera.Exclusions)
                 {
                     SKRect rectangle = SKRect.Create(zone.Start.X, zone.Start.Y, zone.End.X - zone.Start.X, zone.End.Y - zone.Start.Y);
-                    canvas.DrawRect(rectangle, new SKPaint
-                    {
-                        Style = SKPaintStyle.Stroke,
-                        Color = GetColour(Settings.ExclusionBoxColor),
-                        StrokeWidth = Settings.StrokeWidth
-                    });
+                    canvas.DrawRect(rectangle, exclusionPaint);
                 }
             }
 
@@ -68,16 +72,39 @@ namespace SynoAI.Services
                 using SKCanvas canvas = new(image);
                 int counter = 1; //used for assigning a reference number on each prediction if AlternativeLabelling is true
 
+                // Drawing objects are the same for every prediction: create them once (the typeface
+                // lookup goes through fontconfig) and release their native memory when done.
+                using SKPaint boxPaint = new()
+                {
+                    Style = SKPaintStyle.Stroke,
+                    Color = GetColour(Settings.BoxColor),
+                    StrokeWidth = Settings.StrokeWidth
+                };
+                using SKTypeface typeface = SKTypeface.FromFamilyName(Settings.Font);
+                using SKFont font = new()
+                {
+                    Typeface = typeface,
+                    Size = Settings.FontSize
+                };
+                using SKPaint textPaint = new()
+                {
+                    IsAntialias = true,
+                    Color = GetColour(Settings.FontColor)
+                };
+                string textBoxColor = Settings.TextBoxColor;
+                bool drawTextBox = !string.IsNullOrWhiteSpace(textBoxColor) && !textBoxColor.Equals(SKColors.Transparent.ToString(), StringComparison.OrdinalIgnoreCase);
+                using SKPaint textBoxPaint = new()
+                {
+                    Style = SKPaintStyle.StrokeAndFill,
+                    Color = GetColour(textBoxColor),
+                    StrokeWidth = Settings.StrokeWidth
+                };
+
                 foreach (AIPrediction prediction in Settings.DrawMode == DrawMode.All ? predictions : validPredictions)
                 {
                     // Draw the box
                     SKRect rectangle = SKRect.Create(prediction.MinX, prediction.MinY, prediction.SizeX, prediction.SizeY);
-                    canvas.DrawRect(rectangle, new SKPaint
-                    {
-                        Style = SKPaintStyle.Stroke,
-                        Color = GetColour(Settings.BoxColor),
-                        StrokeWidth = Settings.StrokeWidth
-                    });
+                    canvas.DrawRect(rectangle, boxPaint);
 
                     // Label creation, either classic label or alternative labelling (and only if there is more than one object)
                     string label = String.Empty;
@@ -107,24 +134,7 @@ namespace SynoAI.Services
                     }
 
                     // Draw background box for the text if required
-                    SKTypeface typeface = SKTypeface.FromFamilyName(Settings.Font);
-
-                    // Create the font object for font-related properties
-                    SKFont font = new()
-                    {
-                        Typeface = typeface,
-                        Size = Settings.FontSize
-                    };
-
-                    // Create the paint object for other drawing properties
-                    SKPaint paint = new()
-                    {
-                        IsAntialias = true,
-                        Color = GetColour(Settings.FontColor)
-                    };
-
-                    string textBoxColor = Settings.TextBoxColor;
-                    if (!string.IsNullOrWhiteSpace(textBoxColor) && !textBoxColor.Equals(SKColors.Transparent.ToString(), StringComparison.OrdinalIgnoreCase))
+                    if (drawTextBox)
                     {
                         // Use SKFont to measure text width
                         float textWidth = font.MeasureText(label);
@@ -139,16 +149,11 @@ namespace SynoAI.Services
                         }
 
                         SKRect textRectangle = SKRect.Create(textBoxX, textBoxY, textBoxWidth, textBoxHeight);
-                        canvas.DrawRect(textRectangle, new SKPaint
-                        {
-                            Style = SKPaintStyle.StrokeAndFill,
-                            Color = GetColour(textBoxColor),
-                            StrokeWidth = Settings.StrokeWidth
-                        });
+                        canvas.DrawRect(textRectangle, textBoxPaint);
                     }
 
                     // Draw the text using the previously defined font
-                    canvas.DrawText(label, x, y, SKTextAlign.Left, font, paint);
+                    canvas.DrawText(label, x, y, SKTextAlign.Left, font, textPaint);
                 }
             }
 
@@ -171,8 +176,21 @@ namespace SynoAI.Services
         /// <param name="snapshot">The image to save.</param>
         public string SaveOriginalImage(ILogger logger, Camera camera, byte[] snapshot)
         {
-            SKBitmap image = SKBitmap.Decode(new MemoryStream(snapshot)) ?? throw new InvalidOperationException("Failed to decode original snapshot.");
-            return SaveImage(logger, camera, image, "Original");
+            // The snapshot is already a JPEG: write it as-is rather than decoding and re-encoding it.
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            string filePath = GetCaptureFilePath(logger, camera, "Original");
+
+            using (FileStream saveStream = new(filePath, FileMode.CreateNew))
+            {
+                saveStream.Write(snapshot);
+            }
+
+            stopwatch.Stop();
+            logger.LogInformation("{CameraName}: Image saved to '{FilePath}' ({ElapsedMs}ms).",
+                camera.Name,
+                filePath,
+                stopwatch.ElapsedMilliseconds);
+            return filePath;
         }
 
 
@@ -186,7 +204,37 @@ namespace SynoAI.Services
         private string SaveImage(ILogger logger, Camera camera, SKBitmap image, string? suffix = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
+            string filePath = GetCaptureFilePath(logger, camera, suffix);
 
+            using (FileStream saveStream = new(filePath, FileMode.CreateNew))
+            {
+                bool saved = image.Encode(saveStream, SKEncodedImageFormat.Jpeg, Constants.JPEG_QUALITY);
+                stopwatch.Stop();
+
+                if (saved)
+                {
+                    logger.LogInformation("{CameraName}: Image saved to '{FilePath}' ({ElapsedMs}ms).",
+                        camera.Name,
+                        filePath,
+                        stopwatch.ElapsedMilliseconds);
+                }
+                else
+                {
+                    logger.LogInformation("{CameraName}: Failed to save image to '{FilePath}' ({ElapsedMs}ms).",
+                        camera.Name,
+                        filePath,
+                        stopwatch.ElapsedMilliseconds);
+                }
+            }
+            return filePath;
+        }
+
+
+        /// <summary>
+        /// Builds the path for a new capture in the camera's capture directory, creating the directory if needed.
+        /// </summary>
+        private string GetCaptureFilePath(ILogger logger, Camera camera, string? suffix)
+        {
             string directory = Constants.DIRECTORY_CAPTURES;
             directory = Path.Combine(directory, camera.Name);
 
@@ -228,26 +276,6 @@ namespace SynoAI.Services
                 camera.Name,
                 filePath);
 
-            using (FileStream saveStream = new(filePath, FileMode.CreateNew))
-            {
-                bool saved = image.Encode(saveStream, SKEncodedImageFormat.Jpeg, 100);
-                stopwatch.Stop();
-
-                if (saved)
-                {
-                    logger.LogInformation("{CameraName}: Image saved to '{FilePath}' ({ElapsedMs}ms).",
-                        camera.Name,
-                        filePath,
-                        stopwatch.ElapsedMilliseconds);
-                }
-                else
-                {
-                    logger.LogInformation("{CameraName}: Failed to save image to '{FilePath}' ({ElapsedMs}ms).",
-                        camera.Name,
-                        filePath,
-                        stopwatch.ElapsedMilliseconds);
-                }
-            }
             return filePath;
         }
 

@@ -1,115 +1,37 @@
 name: Build
 
+# Dependency updates come from Dependabot (.github/dependabot.yml) as pull requests.
+# This workflow only builds and tests them, and publishes the image from main.
+
 on:
+  # Weekly rebuild so the published image picks up patched .NET runtime and OS
+  # layers from the mcr.microsoft.com/dotnet/aspnet:10.0 tag (refreshed monthly).
   schedule:
-    - cron: '15 2 8/14 * *'
+    - cron: '15 2 * * 3'
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      packages_updated: ${{ steps.check_packages.outputs.packages_updated }}
 
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.x
 
-      - name: Install dotnet-outdated
-        run: dotnet tool install --global dotnet-outdated-tool
-
-      - name: Update NuGet Packages (and capture updated list)
-        id: check_packages
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Always create the file so jq never fails on missing file
-          : > outdated.json
-
-          # Try to capture JSON to file (older versions may not support JSON; don't fail the job)
-          # NOTE: We redirect stdout to file because it's more compatible than --output <file>
-          dotnet outdated --output-format json > outdated.json 2>/dev/null || true
-
-          # Upgrade packages (this is the real action we care about)
-          dotnet outdated --upgrade
-
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "PACKAGES_UPDATED=true" >> "$GITHUB_ENV"
-            echo "packages_updated=true" >> "$GITHUB_OUTPUT"
-
-            UPDATED_LIST=""
-
-            # Only attempt jq parsing if file is non-empty and jq exists
-            if [ -s outdated.json ] && command -v jq >/dev/null 2>&1; then
-              # Schema-tolerant parse: find objects that look like package entries and print Name + old->new
-              UPDATED_LIST="$(jq -r '
-                .. | objects
-                | select(has("Name"))
-                | select(has("ResolvedVersion") or has("CurrentVersion") or has("Version"))
-                | select(has("LatestVersion") or has("UpgradeVersion") or has("TargetVersion"))
-                | "\(.Name): \(.ResolvedVersion // .CurrentVersion // .Version) -> \(.LatestVersion // .UpgradeVersion // .TargetVersion)"
-              ' outdated.json | sort -u || true)"
-            fi
-
-            # Hard fallback if JSON wasn't produced / schema mismatch
-            if [ -z "${UPDATED_LIST}" ]; then
-              UPDATED_LIST="(Packages were updated, but dotnet-outdated JSON output wasn't available/parsable on this runner.)"
-            fi
-
-            {
-              echo "UPDATED_PACKAGES<<EOF"
-              echo "${UPDATED_LIST}"
-              echo "EOF"
-            } >> "$GITHUB_ENV"
-
-            {
-              echo "## NuGet packages updated"
-              echo ""
-              echo '```'
-              echo "${UPDATED_LIST}"
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-
-            echo "Updated packages:"
-            echo "${UPDATED_LIST}"
-          else
-            echo "PACKAGES_UPDATED=false" >> "$GITHUB_ENV"
-            echo "packages_updated=false" >> "$GITHUB_OUTPUT"
-
-            {
-              echo "## NuGet packages updated"
-              echo ""
-              echo "No changes."
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Commit and Push Changes
-        if: ${{ env.PACKAGES_UPDATED == 'true' && github.ref_name == 'main' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-
-          git add .
-          git commit -m "Update NuGet packages" -m "${UPDATED_PACKAGES}"
-          git push origin HEAD:main
-
+      # Locked mode fails the build if a .csproj and its packages.lock.json disagree.
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore --locked-mode
 
       - name: Build
         run: dotnet build --no-restore
@@ -119,14 +41,15 @@ jobs:
 
   publish:
     needs: build
-    if: ${{ github.event_name != 'schedule' || needs.build.outputs.packages_updated == 'true' }}
+    # Never publish :latest from a pull request.
+    if: ${{ github.event_name != 'pull_request' && github.ref_name == 'main' }}
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build the Docker image
-        run: docker build -t dewitauto/synoai-fork:latest SynoAI
+        run: docker build --pull -t dewitauto/synoai-fork:latest SynoAI
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
