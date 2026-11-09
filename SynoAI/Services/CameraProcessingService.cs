@@ -149,7 +149,7 @@ namespace SynoAI.Services
             try
             {
                 using SKPixmap pixmap = bitmap.PeekPixels() ?? throw new InvalidOperationException($"{camera.Name}: Failed to get pixel data from rotated bitmap.");
-                using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, RotatedJpegQuality) ?? throw new InvalidOperationException($"{camera.Name}: Failed to encode rotated image.");
+                using SKData data = pixmap.Encode(SKEncodedImageFormat.Jpeg, Constants.JPEG_QUALITY) ?? throw new InvalidOperationException($"{camera.Name}: Failed to encode rotated image.");
                 _logger.LogInformation("{CameraName}: Image preprocessing complete ({Ms}ms).", camera.Name, stopwatch.ElapsedMilliseconds);
 
                 return (data.ToArray(), bitmap);
@@ -160,12 +160,6 @@ namespace SynoAI.Services
                 throw;
             }
         }
-
-        /// <summary>
-        /// JPEG quality for a rotated snapshot. These bytes go to the AI and are saved as the
-        /// "original" capture; 90 is visually lossless for detection and far smaller than 100.
-        /// </summary>
-        private const int RotatedJpegQuality = 90;
 
         private static SKBitmap Rotate(SKBitmap bitmap, double angle)
         {

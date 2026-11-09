@@ -208,7 +208,7 @@ namespace SynoAI.Services
 
             using (FileStream saveStream = new(filePath, FileMode.CreateNew))
             {
-                bool saved = image.Encode(saveStream, SKEncodedImageFormat.Jpeg, 100);
+                bool saved = image.Encode(saveStream, SKEncodedImageFormat.Jpeg, Constants.JPEG_QUALITY);
                 stopwatch.Stop();
 
                 if (saved)
