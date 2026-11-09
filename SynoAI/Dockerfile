@@ -4,6 +4,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libfontconfig1 fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+# SkiaSharp allocates image buffers with native malloc from many thread-pool threads; glibc then
+# keeps a separate arena per thread (up to 8 x cores) holding freed pages. Two arenas halves the
+# resident memory under load (measured: ~200 MB -> ~85 MB anonymous after 60 detections on 2560x1440).
+ENV MALLOC_ARENA_MAX=2
 WORKDIR /app
 # .NET 8+ container images listen on 8080 by default (ASPNETCORE_HTTP_PORTS).
 EXPOSE 8080

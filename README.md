@@ -440,11 +440,11 @@ The Docker image is published to Docker Hub as `dewitauto/synoai-fork`.
 docker run \
   -v /path/to/appsettings.json:/app/appsettings.json \
   -v /path/to/captures:/app/Captures \
-  -p 8080:80 \
+  -p 8080:8080 \
   dewitauto/synoai-fork:latest
 ```
 
-The default listen port inside the container is `80`. Map it to any available port on your host.
+The container listens on port `8080` (the .NET default). Map it to any available port on your host, e.g. `-p 86:8080`.
 
 ### Docker Compose
 
@@ -453,7 +453,7 @@ services:
   synoai:
     image: dewitauto/synoai-fork:latest
     ports:
-      - "8080:80"
+      - "8080:8080"
     volumes:
       - /docker/synoai/appsettings.json:/app/appsettings.json
       - /docker/synoai/captures:/app/Captures
